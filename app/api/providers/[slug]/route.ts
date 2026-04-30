@@ -49,20 +49,25 @@ export async function PATCH(
     let geoUpdate: { lat?: number; lng?: number } = {}
 
     if (address) {
-      const token = process.env.MAPBOX_TOKEN
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&limit=1`
-      const geoRes = await fetch(url)
-      const geoData = await geoRes.json()
-      const [geoLng, geoLat] = geoData.features?.[0]?.center ?? [null, null]
-      if (geoLat && geoLng) geoUpdate = { lat: geoLat, lng: geoLng }
+      try {
+        const token = process.env.MAPBOX_TOKEN
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&limit=1`
+        const geoRes = await fetch(url)
+        const geoData = await geoRes.json()
+        const [geoLng, geoLat] = geoData.features?.[0]?.center ?? [null, null]
+        if (geoLat !== null && geoLng !== null) geoUpdate = { lat: geoLat, lng: geoLng }
+      } catch {
+        // Geocoding failure is non-fatal — proceed without updating location
+      }
     }
 
     const updated = await prisma.provider.update({
       where: { slug: params.slug },
       data: { ...rest, ...geoUpdate },
       select: {
-        id: true, name: true, slug: true, bio: true, keywords: true,
-        lat: true, lng: true, acceptedRadiusKm: true, bookingMode: true, isVisible: true,
+        id: true, name: true, slug: true, bio: true, avatarUrl: true,
+        profession: true, keywords: true, lat: true, lng: true,
+        acceptedRadiusKm: true, bookingMode: true, isVisible: true,
       },
     })
 
