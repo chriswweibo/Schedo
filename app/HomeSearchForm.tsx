@@ -22,20 +22,27 @@ export function HomeSearchForm() {
   return (
     <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-end">
       <Input
+        id="keyword"
+        label="Service"
         placeholder="What service do you need?"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         className="flex-1"
       />
       <Input
+        id="location"
+        label="Location"
         placeholder="Location"
         value={location}
         onChange={(e) => setLocation(e.target.value)}
         className="flex-1"
       />
       <Input
+        id="date"
+        label="Date"
         type="date"
         value={date}
+        min={new Date().toISOString().split('T')[0]}
         onChange={(e) => setDate(e.target.value)}
         className="w-40"
       />
