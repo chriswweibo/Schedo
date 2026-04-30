@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Provider {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  email            String         @unique
+  passwordHash     String
+  bio              String?
+  avatarUrl        String?
+  profession       String
+  keywords         String[]
+  lat              Float?
+  lng              Float?
+  acceptedRadiusKm Int            @default(25)
+  bookingMode      BookingMode    @default(INSTANT)
+  isVisible        Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+
+  availability  Availability[]
+  bookings      Booking[]
+  blockedSlots  BlockedSlot[]
+  completedJobs CompletedJob[]
+}
+
+model Availability {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+  dayOfWeek  Int
+  startTime  String
+  endTime    String
+  isActive   Boolean  @default(true)
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  providerId String
+  provider   Provider      @relation(fields: [providerId], references: [id])
+  guestName  String
+  guestEmail String
+  guestPhone String?
+  date       DateTime
+  startTime  String
+  endTime    String
+  status     BookingStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime      @default(now())
+}
+
+model BlockedSlot {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+  date       DateTime
+  startTime  String
+  endTime    String
+  reason     String?
+}
+
+model CompletedJob {
+  id          String   @id @default(cuid())
+  providerId  String
+  provider    Provider @relation(fields: [providerId], references: [id])
+  title       String
+  description String?
+  imageUrl    String?
+  completedAt DateTime
+}
+
+enum BookingMode {
+  INSTANT
+  REQUEST
+  BOTH
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  CANCELLED
+}
