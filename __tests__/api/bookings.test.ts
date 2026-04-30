@@ -88,6 +88,24 @@ describe('POST /api/bookings', () => {
     const res = await POST(req)
     expect(res.status).toBe(409)
   })
+
+  it('creates CONFIRMED booking when BOTH mode + bookingType INSTANT', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'BOTH', email: 'bob@example.com',
+    })
+    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({ ...validBody, bookingType: 'INSTANT' }),
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    const data = await res.json()
+    expect(data.status).toBe('CONFIRMED')
+  })
 })
 
 describe('PATCH /api/bookings/[id]', () => {
@@ -119,5 +137,22 @@ describe('PATCH /api/bookings/[id]', () => {
     })
     const res = await PATCH(req, { params: { id: 'b1' } })
     expect(res.status).toBe(401)
+  })
+
+  it('returns 403 when authenticated user is not the booking provider', async () => {
+    ;(getServerSession as jest.Mock).mockResolvedValue({ user: { id: 'different-provider', slug: 'other' } })
+    ;(prisma.booking.findUnique as jest.Mock).mockResolvedValue({
+      id: 'b1', providerId: 'p1', status: 'PENDING',
+      guestEmail: 'alice@example.com', guestName: 'Alice',
+      provider: { name: 'Bob', profession: 'Plumber' },
+      date: new Date('2026-05-04'), startTime: '10:00', endTime: '11:00',
+    })
+
+    const req = new NextRequest('http://localhost/api/bookings/b1', {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'CONFIRMED' }),
+    })
+    const res = await PATCH(req, { params: { id: 'b1' } })
+    expect(res.status).toBe(403)
   })
 })
