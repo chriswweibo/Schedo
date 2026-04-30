@@ -1,101 +1,58 @@
-import Image from "next/image";
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { HomeSearchForm } from './HomeSearchForm'
 
-export default function Home() {
+const ProviderMap = dynamic(
+  () => import('@/components/map/ProviderMap').then((m) => m.ProviderMap),
+  { ssr: false, loading: () => <div className="h-full w-full rounded-xl bg-stone-200 animate-pulse" /> }
+)
+
+const CATEGORIES = [
+  { label: 'Electrical', icon: '⚡' },
+  { label: 'Plumbing', icon: '🔧' },
+  { label: 'Gardening', icon: '🌿' },
+  { label: 'Building', icon: '🏗️' },
+  { label: 'Painting', icon: '🎨' },
+  { label: 'Cleaning', icon: '🧹' },
+  { label: 'Roofing', icon: '🏠' },
+  { label: 'Flooring', icon: '🪵' },
+]
+
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main>
+      {/* Hero */}
+      <section className="grid min-h-[70vh] grid-cols-1 gap-0 lg:grid-cols-2">
+        <div className="flex flex-col justify-center px-8 py-16 lg:px-16">
+          <h1 className="mb-4 text-4xl font-bold leading-tight text-stone-900 lg:text-5xl">
+            Book trusted local<br />service providers
+          </h1>
+          <p className="mb-8 text-lg text-stone-500">
+            Electricians, plumbers, gardeners and more — no account needed.
+          </p>
+          <HomeSearchForm />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+        <div className="hidden h-full min-h-[400px] lg:block">
+          <ProviderMap providers={[]} zoom={10} />
+        </div>
+      </section>
+
+      {/* Category grid */}
+      <section className="px-8 py-12 lg:px-16">
+        <h2 className="mb-6 text-xl font-semibold text-stone-800">Browse by category</h2>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.label}
+              href={`/search?keyword=${cat.label.toLowerCase()}`}
+              className="flex flex-col items-center gap-2 rounded-xl border border-stone-200 bg-white p-4 text-center shadow-sm transition hover:border-primary hover:shadow-md"
+            >
+              <span className="text-3xl">{cat.icon}</span>
+              <span className="text-sm font-medium text-stone-700">{cat.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </main>
+  )
 }
