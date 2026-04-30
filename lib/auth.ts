@@ -33,14 +33,14 @@ export const authOptions: NextAuthOptions = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.slug = (user as unknown as { slug: string }).slug
+        token.slug = user.slug
       }
       return token
     },
     session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.slug = token.slug as string
+        session.user.id = token.id ?? ''
+        session.user.slug = token.slug ?? ''
       }
       return session
     },
