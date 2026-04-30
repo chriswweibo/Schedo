@@ -40,71 +40,87 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl
-  const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null
-  const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null
-  const keyword = searchParams.get('keyword')?.toLowerCase() ?? ''
-  const date = searchParams.get('date') // YYYY-MM-DD
+  try {
+    const { searchParams } = req.nextUrl
+    const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null
+    const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null
+    const keyword = searchParams.get('keyword')?.toLowerCase() ?? ''
+    const date = searchParams.get('date')
 
-  const providers = await prisma.provider.findMany({
-    where: { isVisible: true },
-    include: { availability: { where: { isActive: true } } },
-    orderBy: [{ createdAt: 'desc' }],
-    take: 200,
-  })
-
-  let results = providers
-
-  // Geographic filter: only include providers whose accepted radius covers the search point
-  if (lat !== null && lng !== null) {
-    results = results.filter((p) => {
-      if (p.lat === null || p.lng === null) return false
-      const dist = haversineKm(lat, lng, p.lat, p.lng)
-      return dist <= p.acceptedRadiusKm
+    const providers = await prisma.provider.findMany({
+      where: { isVisible: true },
+      include: { availability: { where: { isActive: true } } },
+      orderBy: [{ createdAt: 'desc' }],
+      take: 200,
     })
-  }
 
-  // Keyword filter against profession and keywords array
-  if (keyword) {
-    results = results.filter(
-      (p) =>
-        p.profession.toLowerCase().includes(keyword) ||
-        p.keywords.some((k) => k.toLowerCase().includes(keyword))
-    )
-  }
+    // Pre-compute distances once
+    const distanceMap = new Map<string, number>()
+    if (lat !== null && lng !== null) {
+      for (const p of providers) {
+        if (p.lat !== null && p.lng !== null) {
+          distanceMap.set(p.id, haversineKm(lat, lng, p.lat, p.lng))
+        }
+      }
+    }
 
-  // Day-of-week filter: only providers who have availability on that day
-  if (date) {
-    const dayOfWeek = new Date(date).getDay()
-    results = results.filter((p) =>
-      p.availability.some((a) => a.dayOfWeek === dayOfWeek && a.isActive)
-    )
-  }
+    let results = providers
 
-  // Sort by distance asc (when location given), then createdAt desc
-  if (lat !== null && lng !== null) {
-    results.sort((a, b) => {
-      const dA = a.lat !== null ? haversineKm(lat, lng!, a.lat, a.lng!) : Infinity
-      const dB = b.lat !== null ? haversineKm(lat, lng!, b.lat, b.lng!) : Infinity
-      return dA - dB
+    // Geographic filter
+    if (lat !== null && lng !== null) {
+      results = results.filter((p) => {
+        const dist = distanceMap.get(p.id)
+        if (dist === undefined) return false
+        return dist <= p.acceptedRadiusKm
+      })
+    }
+
+    // Keyword filter
+    if (keyword) {
+      results = results.filter(
+        (p) =>
+          p.profession.toLowerCase().includes(keyword) ||
+          p.keywords.some((k) => k.toLowerCase().includes(keyword))
+      )
+    }
+
+    // Day-of-week filter
+    if (date) {
+      const dayOfWeek = new Date(date).getDay()
+      results = results.filter((p) =>
+        p.availability.some((a) => a.dayOfWeek === dayOfWeek && a.isActive)
+      )
+    }
+
+    // Sort by distance asc, fallback to createdAt order (already from Prisma)
+    if (lat !== null && lng !== null) {
+      results.sort((a, b) => {
+        const dA = distanceMap.get(a.id) ?? Infinity
+        const dB = distanceMap.get(b.id) ?? Infinity
+        return dA - dB
+      })
+    }
+
+    const response = results.slice(0, 50).map((p) => {
+      const distanceKm = distanceMap.has(p.id)
+        ? Math.round(distanceMap.get(p.id)! * 10) / 10
+        : null
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        profession: p.profession,
+        avatarUrl: p.avatarUrl,
+        keywords: p.keywords,
+        lat: p.lat,
+        lng: p.lng,
+        createdAt: p.createdAt,
+        distanceKm,
+      }
     })
+
+    return NextResponse.json(response)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  const response = results.slice(0, 50).map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    profession: p.profession,
-    avatarUrl: p.avatarUrl,
-    keywords: p.keywords,
-    lat: p.lat,
-    lng: p.lng,
-    createdAt: p.createdAt,
-    distanceKm:
-      lat !== null && p.lat !== null
-        ? Math.round(haversineKm(lat, lng!, p.lat, p.lng!) * 10) / 10
-        : null,
-  }))
-
-  return NextResponse.json(response)
 }
