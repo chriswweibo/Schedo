@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Card } from '@/components/ui/Card'
 import { format } from 'date-fns'
 
@@ -12,7 +13,9 @@ export function CompletedJobCard({ title, description, imageUrl, completedAt }: 
   return (
     <Card className="overflow-hidden">
       {imageUrl && (
-        <img src={imageUrl} alt={title} className="h-40 w-full object-cover" />
+        <div className="relative h-40 w-full">
+          <Image src={imageUrl} alt={title} fill className="object-cover" />
+        </div>
       )}
       <div className="p-4">
         <p className="font-semibold">{title}</p>

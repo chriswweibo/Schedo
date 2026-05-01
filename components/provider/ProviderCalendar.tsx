@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format,
   addMonths, subMonths, isToday, isBefore, startOfDay
@@ -18,6 +19,9 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [slots, setSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [slotsError, setSlotsError] = useState<string | null>(null)
+
+  const today = startOfDay(new Date())
 
   const activeDays = new Set(
     availability.filter((a) => a.isActive).map((a) => a.dayOfWeek)
@@ -30,23 +34,37 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
 
   const startPad = startOfMonth(month).getDay() // 0=Sun
 
+  const isCurrentMonth = month.getFullYear() === new Date().getFullYear() && month.getMonth() === new Date().getMonth()
+
   async function handleDayClick(day: Date) {
     if (!activeDays.has(day.getDay())) return
-    if (isBefore(day, startOfDay(new Date()))) return
+    if (isBefore(day, today)) return
     setSelectedDate(day)
     setLoadingSlots(true)
+    setSlotsError(null)
     const dateStr = format(day, 'yyyy-MM-dd')
-    const res = await fetch(`/api/availability/${providerId}?date=${dateStr}`)
-    const data: TimeSlot[] = await res.json()
-    setSlots(data)
-    setLoadingSlots(false)
+    try {
+      const res = await fetch(`/api/availability/${providerId}?date=${dateStr}`)
+      if (!res.ok) throw new Error('Failed to load slots')
+      const data: TimeSlot[] = await res.json()
+      setSlots(data)
+    } catch {
+      setSlotsError('Could not load available slots. Please try again.')
+      setSlots([])
+    } finally {
+      setLoadingSlots(false)
+    }
   }
 
   return (
     <div>
       {/* Month nav */}
       <div className="flex items-center justify-between mb-3">
-        <button onClick={() => setMonth(subMonths(month, 1))} className="p-1 text-stone-500 hover:text-stone-900">←</button>
+        <button
+          onClick={() => setMonth(subMonths(month, 1))}
+          disabled={isCurrentMonth}
+          className="p-1 text-stone-500 hover:text-stone-900 disabled:opacity-30 disabled:cursor-default"
+        >←</button>
         <span className="font-semibold">{format(month, 'MMMM yyyy')}</span>
         <button onClick={() => setMonth(addMonths(month, 1))} className="p-1 text-stone-500 hover:text-stone-900">→</button>
       </div>
@@ -63,7 +81,7 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
         {Array.from({ length: startPad }).map((_, i) => <div key={`pad-${i}`} />)}
         {days.map((day) => {
           const isAvail = activeDays.has(day.getDay())
-          const isPast = isBefore(day, startOfDay(new Date()))
+          const isPast = isBefore(day, today)
           const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
 
           return (
@@ -92,18 +110,20 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
           </p>
           {loadingSlots ? (
             <p className="text-sm text-stone-400">Loading…</p>
+          ) : slotsError ? (
+            <p className="text-sm text-red-600">{slotsError}</p>
           ) : slots.length === 0 ? (
             <p className="text-sm text-stone-400">No available slots for this day.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {slots.map((slot) => (
-                <a
-                  key={slot.startTime}
+                <Link
+                  key={`${slot.startTime}-${slot.endTime}`}
                   href={`/booking/${providerId}?date=${format(selectedDate, 'yyyy-MM-dd')}&start=${slot.startTime}&end=${slot.endTime}`}
                   className="rounded-lg border border-primary px-3 py-1 text-sm text-primary hover:bg-primary hover:text-white transition"
                 >
                   {slot.startTime}
-                </a>
+                </Link>
               ))}
             </div>
           )}

@@ -1,9 +1,18 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ProviderCalendar } from '@/components/provider/ProviderCalendar'
 import { CompletedJobCard } from '@/components/provider/CompletedJobCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+
+interface CompletedJob {
+  id: string
+  title: string
+  description: string | null
+  imageUrl: string | null
+  completedAt: string
+}
 
 async function getProvider(slug: string) {
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/providers/${slug}`, {
@@ -25,9 +34,9 @@ export default async function ProviderProfilePage({
     <main className="mx-auto max-w-5xl px-4 py-10">
       {/* Header */}
       <Card className="mb-8 flex items-center gap-6 p-6">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-stone-100 text-3xl font-bold text-stone-500">
+        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-stone-100 text-3xl font-bold text-stone-500">
           {provider.avatarUrl ? (
-            <img src={provider.avatarUrl} alt={provider.name} className="h-full w-full rounded-full object-cover" />
+            <Image src={provider.avatarUrl} alt={provider.name} fill className="rounded-full object-cover" />
           ) : (
             provider.name[0]
           )}
@@ -55,7 +64,7 @@ export default async function ProviderProfilePage({
             <div>
               <h2 className="mb-4 text-lg font-semibold">Past work</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {provider.completedJobs.map((job: any) => (
+                {provider.completedJobs.map((job: CompletedJob) => (
                   <CompletedJobCard
                     key={job.id}
                     title={job.title}
