@@ -44,7 +44,15 @@ export function BookingForm({
         )
       } else {
         const data = await res.json()
-        setError(data.error ?? 'Booking failed. Please try again.')
+        const err = data.error
+        if (typeof err === 'string') {
+          setError(err)
+        } else if (err?.fieldErrors) {
+          const msgs = Object.values(err.fieldErrors as Record<string, string[]>).flat()
+          setError(msgs[0] ?? 'Booking failed. Please try again.')
+        } else {
+          setError('Booking failed. Please try again.')
+        }
       }
     } catch {
       setError('Network error. Please check your connection and try again.')

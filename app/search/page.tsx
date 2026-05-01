@@ -1,56 +1,91 @@
+import { prisma } from '@/lib/prisma'
+import { haversineKm } from '@/lib/geo'
 import { SearchFilters } from './SearchFilters'
 import { SearchResults } from './SearchResults'
 import type { MapProvider } from '@/components/map/ProviderMap'
 
-interface ProviderResult {
-  id: string
-  name: string
-  slug: string
-  profession: string
-  avatarUrl: string | null
-  keywords: string[]
-  lat: number | null
-  lng: number | null
-  createdAt: string
-  distanceKm: number | null
-}
-
 interface SearchPageProps {
-  searchParams: { keyword?: string; location?: string; date?: string; lat?: string; lng?: string }
+  searchParams: { keyword?: string; name?: string; date?: string; lat?: string; lng?: string }
 }
 
-async function fetchProviders(params: SearchPageProps['searchParams']): Promise<ProviderResult[] | null> {
-  try {
-    const qs = new URLSearchParams()
-    if (params.keyword) qs.set('keyword', params.keyword)
-    if (params.date) qs.set('date', params.date)
-    if (params.lat) qs.set('lat', params.lat)
-    if (params.lng) qs.set('lng', params.lng)
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/providers?${qs}`, {
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    return res.json() as Promise<ProviderResult[]>
-  } catch {
-    return null
+async function queryProviders(params: SearchPageProps['searchParams']) {
+  const lat = params.lat ? parseFloat(params.lat) : null
+  const lng = params.lng ? parseFloat(params.lng) : null
+  const keyword = params.keyword?.toLowerCase().trim() ?? ''
+  const name    = params.name?.toLowerCase().trim() ?? ''
+  const date    = params.date ?? ''
+
+  const all = await prisma.provider.findMany({
+    where: { isVisible: true },
+    include: { availability: { where: { isActive: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 500,
+  })
+
+  // Pre-compute distances
+  const distMap = new Map<string, number>()
+  if (lat !== null && lng !== null) {
+    for (const p of all) {
+      if (p.lat !== null && p.lng !== null) {
+        distMap.set(p.id, haversineKm(lat, lng, p.lat, p.lng))
+      }
+    }
   }
+
+  let results = all
+
+  // Keyword filter — profession OR tags
+  if (keyword) {
+    results = results.filter(
+      (p) =>
+        p.profession.toLowerCase().includes(keyword) ||
+        p.keywords.some((k) => k.toLowerCase().includes(keyword))
+    )
+  }
+
+  // Name filter
+  if (name) {
+    results = results.filter((p) => p.name.toLowerCase().includes(name))
+  }
+
+  // Day-of-week filter — use getUTCDay() because YYYY-MM-DD strings parse as UTC midnight
+  if (date) {
+    const dow = new Date(date).getUTCDay()
+    results = results.filter((p) => {
+      // No availability set → treat as available (provider hasn't blocked anything)
+      if (p.availability.length === 0) return true
+      return p.availability.some((a) => a.dayOfWeek === dow)
+    })
+  }
+
+  // Geographic filter (only when lat/lng supplied)
+  if (lat !== null && lng !== null) {
+    results = results.filter((p) => {
+      const dist = distMap.get(p.id)
+      return dist !== undefined && dist <= p.acceptedRadiusKm
+    })
+  }
+
+  // Sort by distance if available, otherwise keep DB order
+  if (lat !== null && lng !== null) {
+    results.sort((a, b) => (distMap.get(a.id) ?? Infinity) - (distMap.get(b.id) ?? Infinity))
+  }
+
+  return results.slice(0, 100).map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    profession: p.profession,
+    avatarUrl: p.avatarUrl,
+    keywords: p.keywords,
+    lat: p.lat,
+    lng: p.lng,
+    distanceKm: distMap.has(p.id) ? Math.round(distMap.get(p.id)! * 10) / 10 : null,
+  }))
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const providers = await fetchProviders(searchParams)
-
-  if (providers === null) {
-    return (
-      <div className="flex h-screen flex-col">
-        <div className="sticky top-0 z-10 border-b border-stone-200 bg-white px-6 py-3">
-          <SearchFilters initialValues={searchParams} />
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-red-600">Unable to load results. Please try again.</p>
-        </div>
-      </div>
-    )
-  }
+  const providers = await queryProviders(searchParams)
 
   const mapProviders: MapProvider[] = providers
     .filter((p) => p.lat !== null && p.lng !== null)
@@ -65,7 +100,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Filter bar */}
       <div className="sticky top-0 z-10 border-b border-stone-200 bg-white px-6 py-3">
         <SearchFilters initialValues={searchParams} />
       </div>

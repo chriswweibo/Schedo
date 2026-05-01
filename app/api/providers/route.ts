@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null
     const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null
     const keyword = searchParams.get('keyword')?.toLowerCase() ?? ''
+    const name = searchParams.get('name')?.toLowerCase() ?? ''
     const date = searchParams.get('date')
 
     const providers = await prisma.provider.findMany({
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // Keyword filter
+    // Keyword filter (profession + tags)
     if (keyword) {
       results = results.filter(
         (p) =>
@@ -84,12 +85,18 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Day-of-week filter
+    // Name filter
+    if (name) {
+      results = results.filter((p) => p.name.toLowerCase().includes(name))
+    }
+
+    // Day-of-week filter — getUTCDay() because YYYY-MM-DD parses as UTC midnight
     if (date) {
-      const dayOfWeek = new Date(date).getDay()
-      results = results.filter((p) =>
-        p.availability.some((a) => a.dayOfWeek === dayOfWeek && a.isActive)
-      )
+      const dayOfWeek = new Date(date).getUTCDay()
+      results = results.filter((p) => {
+        if (p.availability.length === 0) return true
+        return p.availability.some((a) => a.dayOfWeek === dayOfWeek && a.isActive)
+      })
     }
 
     // Sort by distance asc, fallback to createdAt order (already from Prisma)

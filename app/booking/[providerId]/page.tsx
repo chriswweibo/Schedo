@@ -13,13 +13,28 @@ export default async function BookingPage({
 }) {
   const provider = await prisma.provider.findUnique({
     where: { id: params.providerId },
-    select: { id: true, name: true, profession: true, bookingMode: true },
+    select: { id: true, name: true, slug: true, profession: true, bookingMode: true },
   })
   if (!provider) notFound()
 
   const date = searchParams.date ?? ''
   const startTime = searchParams.start ?? ''
   const endTime = searchParams.end ?? ''
+
+  if (!date || !startTime || !endTime) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-10">
+        <h1 className="mb-2 text-2xl font-bold">Book {provider.name}</h1>
+        <p className="text-stone-500">
+          Please select a date and time slot from{' '}
+          <a href={`/p/${provider.slug ?? ''}`} className="text-primary underline">
+            {provider.name}&apos;s profile
+          </a>
+          .
+        </p>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">

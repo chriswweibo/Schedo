@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { ProviderCard } from '@/components/provider/ProviderCard'
 import type { MapProvider } from '@/components/map/ProviderMap'
@@ -25,6 +25,15 @@ interface SearchResultsProps {
 
 export function SearchResults({ providers, mapProviders }: SearchResultsProps) {
   const [highlightedId, setHighlightedId] = useState<string | null>(null)
+  const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined)
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      () => {} // permission denied — map will auto-fit to providers instead
+    )
+  }, [])
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -53,6 +62,8 @@ export function SearchResults({ providers, mapProviders }: SearchResultsProps) {
       <div className="hidden flex-1 lg:block">
         <ProviderMap
           providers={mapProviders}
+          center={userLocation}
+          zoom={12}
           highlightedId={highlightedId}
           onPinClick={(slug) => {
             const el = document.getElementById(`card-${slug}`)

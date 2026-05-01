@@ -4,7 +4,7 @@ export const RegisterProviderSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
-  profession: z.string().min(2),
+  profession: z.string().min(1).default('Other'),
 })
 
 export const CreateBookingSchema = z.object({
@@ -21,6 +21,7 @@ export const CreateBookingSchema = z.object({
 
 export const UpdateProviderSettingsSchema = z.object({
   bio: z.string().optional(),
+  profession: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   address: z.string().optional(),
   acceptedRadiusKm: z.number().min(5).max(100).optional(),

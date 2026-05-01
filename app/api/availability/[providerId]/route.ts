@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { startOfDay, endOfDay, parseISO } from 'date-fns'
 import { prisma } from '@/lib/prisma'
-import { getAvailableSlots } from '@/lib/availability'
+import { getAllSlots } from '@/lib/availability'
 
 export async function GET(
   req: NextRequest,
@@ -33,7 +33,7 @@ export async function GET(
       }),
     ])
 
-    const slots = getAvailableSlots(provider.availability, bookings, blocked, date)
+    const slots = getAllSlots(provider.availability, bookings, blocked, date)
     return NextResponse.json(slots)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

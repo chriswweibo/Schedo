@@ -1,6 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  if (!process.env.RESEND_API_KEY) return null
+  return new Resend(process.env.RESEND_API_KEY)
+}
+
 const FROM = process.env.RESEND_FROM ?? 'Schedo <noreply@schedo.app>'
 
 interface BookingEmailParams {
@@ -15,6 +19,8 @@ interface BookingEmailParams {
 }
 
 export async function sendInstantConfirmation(p: BookingEmailParams) {
+  const resend = getResend()
+  if (!resend) return
   await Promise.all([
     resend.emails.send({
       from: FROM,
@@ -38,6 +44,8 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
 }
 
 export async function sendRequestSubmitted(p: BookingEmailParams) {
+  const resend = getResend()
+  if (!resend) return
   await Promise.all([
     resend.emails.send({
       from: FROM,
@@ -61,6 +69,8 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
 }
 
 export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerEmail'>) {
+  const resend = getResend()
+  if (!resend) return
   await resend.emails.send({
     from: FROM,
     to: p.guestEmail,
@@ -78,6 +88,8 @@ export async function sendRequestDeclined(p: {
   providerName: string
   date: string
 }) {
+  const resend = getResend()
+  if (!resend) return
   await resend.emails.send({
     from: FROM,
     to: p.guestEmail,

@@ -6,15 +6,13 @@ import { Button } from '@/components/ui/Button'
 
 export function HomeSearchForm() {
   const router = useRouter()
-  const [keyword, setKeyword] = useState('')
-  const [location, setLocation] = useState('')
+  const [name, setName] = useState('')
   const [date, setDate] = useState('')
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     const params = new URLSearchParams()
-    if (keyword) params.set('keyword', keyword)
-    if (location) params.set('location', location)
+    if (name) params.set('name', name)
     if (date) params.set('date', date)
     router.push(`/search?${params.toString()}`)
   }
@@ -22,19 +20,11 @@ export function HomeSearchForm() {
   return (
     <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-end">
       <Input
-        id="keyword"
-        label="Service"
-        placeholder="What service do you need?"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        className="flex-1"
-      />
-      <Input
-        id="location"
-        label="Location"
-        placeholder="Location"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
+        id="name"
+        label="Provider name"
+        placeholder="Search by provider name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
         className="flex-1"
       />
       <Input

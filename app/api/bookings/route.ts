@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     ]
 
     const overlap = allBlocked.some((b) =>
-      timesOverlap(startTime, endTime, b.startTime, b.endTime, date)
+      timesOverlap(startTime, endTime, b.startTime, b.endTime)
     )
     if (overlap) {
       return NextResponse.json({ error: 'This time slot is no longer available' }, { status: 409 })

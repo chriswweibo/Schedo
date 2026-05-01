@@ -1,25 +1,31 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { ProviderCalendar } from '@/components/provider/ProviderCalendar'
-import { CompletedJobCard } from '@/components/provider/CompletedJobCard'
-import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { prisma } from '@/lib/prisma'
 
-interface CompletedJob {
-  id: string
-  title: string
-  description: string | null
-  imageUrl: string | null
-  completedAt: string
-}
+const WorksCarousel = dynamic(
+  () => import('@/components/provider/WorksCarousel').then((m) => m.WorksCarousel),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-52 rounded-2xl bg-stone-100 animate-pulse" />
+    ),
+  }
+)
 
 async function getProvider(slug: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/providers/${slug}`, {
-    cache: 'no-store',
+  return prisma.provider.findUnique({
+    where: { slug },
+    select: {
+      id: true, name: true, slug: true, bio: true, avatarUrl: true,
+      profession: true, keywords: true,
+      bookingMode: true, isVisible: true,
+      availability: { where: { isActive: true } },
+      completedJobs: { orderBy: { completedAt: 'desc' } },
+    },
   })
-  if (!res.ok) return null
-  return res.json()
 }
 
 export default async function ProviderProfilePage({
@@ -30,65 +36,55 @@ export default async function ProviderProfilePage({
   const provider = await getProvider(params.slug)
   if (!provider) notFound()
 
+  const professions = provider.profession.split(',').map((s) => s.trim()).filter(Boolean)
+
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      {/* Header */}
-      <Card className="mb-8 flex items-center gap-6 p-6">
-        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-stone-100 text-3xl font-bold text-stone-500">
-          {provider.avatarUrl ? (
-            <Image src={provider.avatarUrl} alt={provider.name} fill className="rounded-full object-cover" />
-          ) : (
-            provider.name[0]
-          )}
+    <main className="mx-auto max-w-4xl px-4 py-10 flex flex-col gap-8">
+
+      {/* ── Header ──────────────────────────────────────────── */}
+      <Card className="p-6">
+        <div className="flex items-start gap-5">
+          <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-3xl font-bold text-indigo-400 overflow-hidden">
+            {provider.avatarUrl ? (
+              <Image src={provider.avatarUrl} alt={provider.name} fill className="object-cover" />
+            ) : (
+              <span>{provider.name[0]}</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold leading-tight text-slate-900">{provider.name}</h1>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {professions.map((p) => (
+                <span key={p} className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                  {p}
+                </span>
+              ))}
+            </div>
+            {provider.bio && (
+              <p className="mt-3 text-stone-600 text-sm leading-relaxed">{provider.bio}</p>
+            )}
+          </div>
         </div>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{provider.name}</h1>
-          <p className="text-stone-500">{provider.profession}</p>
-        </div>
-        <Link href={`/booking/${provider.id}`}>
-          <Button>Book now</Button>
-        </Link>
       </Card>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
-        {/* Left: bio + completed jobs */}
-        <div>
-          {provider.bio && (
-            <div className="mb-8">
-              <h2 className="mb-2 text-lg font-semibold">About</h2>
-              <p className="text-stone-600 leading-relaxed">{provider.bio}</p>
-            </div>
-          )}
+      {/* ── Past work + Calendar ────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-slate-800">Past work</h2>
+          <WorksCarousel jobs={provider.completedJobs} />
+        </section>
 
-          {provider.completedJobs?.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold">Past work</h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {provider.completedJobs.map((job: CompletedJob) => (
-                  <CompletedJobCard
-                    key={job.id}
-                    title={job.title}
-                    description={job.description}
-                    imageUrl={job.imageUrl}
-                    completedAt={job.completedAt}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right: calendar */}
-        <div>
+        <section id="availability">
+          <h2 className="mb-4 text-lg font-semibold text-slate-800">Book a slot</h2>
           <Card className="p-4">
-            <h2 className="mb-4 text-lg font-semibold">Availability</h2>
             <ProviderCalendar
               providerId={provider.id}
               availability={provider.availability}
             />
           </Card>
-        </div>
+        </section>
       </div>
+
     </main>
   )
 }

@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Schedo
 
-## Getting Started
+A service provider scheduling platform built with Next.js 14. Customers find and book local professionals; providers manage their availability, bookings, and past work portfolio.
 
-First, run the development server:
+## Features
+
+- **Search & discovery** — find providers by profession, keyword, location, or available date
+- **Interactive map** — Leaflet/OpenStreetMap map on the home page and search results
+- **Provider profiles** — bio, profession badges, booking calendar, and past work carousel
+- **Booking flow** — instant confirmation or request-based, with email notifications via Resend
+- **Provider dashboard** — week-view calendar, accept/decline bookings, block time slots
+- **Settings** — profession (multi-select), service radius, booking mode, visibility toggle
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Database | PostgreSQL (Neon) |
+| ORM | Prisma 7 + `@prisma/adapter-pg` |
+| Auth | NextAuth.js v4 (credentials) |
+| Email | Resend |
+| Maps | Leaflet + OpenStreetMap |
+| Testing | Jest + React Testing Library |
+
+## Data model
+
+```
+Provider        — profile, location, booking mode, visibility
+Availability    — per-day working hours (dayOfWeek + start/end time)
+Booking         — guest details, date, time slot, status (PENDING/CONFIRMED/DECLINED/CANCELLED)
+BlockedSlot     — provider-blocked time ranges
+CompletedJob    — past work entries with image and description
+```
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 18+
+- A PostgreSQL database (Neon free tier works)
+- A Resend account for email (optional in development)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+Create `.env.local`:
+
+```env
+DATABASE_URL=postgresql://...
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+RESEND_API_KEY=re_...          # optional, emails are skipped if missing
+```
+
+### 3. Push the schema
+
+```bash
+npx prisma db push
+```
+
+### 4. Seed demo data
+
+Seeds 100 Sydney-based providers across 26 professions, each with availability schedules and 3 past work entries:
+
+```bash
+npm run seed
+```
+
+All demo accounts use the password `password123`.  
+Example login: `provider1@demo.schedo.app`
+
+### 5. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  page.tsx                  # Home — search form + map
+  search/                   # Search results page
+  p/[slug]/                 # Provider public profile
+  booking/[providerId]/     # Booking form
+  dashboard/                # Provider dashboard (auth required)
+  auth/                     # Login / register pages
+  api/
+    providers/              # Provider search (GET)
+    availability/[id]/      # Time slot availability (GET)
+    bookings/               # Create booking (POST)
+    me/
+      calendar/             # Week view bookings + blocks (GET)
+      blocks/               # Block/unblock time slots (POST/DELETE)
+      availability/         # Update working hours (PUT)
+      settings/             # Update profile settings (PUT)
+      jobs/                 # Manage past work entries (GET/POST/DELETE)
 
-## Learn More
+components/
+  provider/
+    ProviderCalendar.tsx    # Public booking calendar (date picker + slot grid)
+    WorksCarousel.tsx       # Past work carousel with lightbox
+  map/
+    ProviderMap.tsx         # Leaflet map wrapper
+  booking/
+    BookingForm.tsx         # Guest booking form
+  ui/
+    Navbar.tsx              # Top navigation
+    Logo.tsx                # SVG logo mark / lockup
 
-To learn more about Next.js, take a look at the following resources:
+lib/
+  availability.ts           # Slot status logic (available/booked/blocked/outside)
+  email.ts                  # Resend email helpers
+  prisma.ts                 # Prisma client singleton
+  validations.ts            # Zod schemas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+prisma/
+  schema.prisma
+  seed.ts                   # 100 demo providers with jobs and availability
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Running tests
 
-## Deploy on Vercel
+```bash
+npm test
+npm run test:watch
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Booking modes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Providers can choose how bookings work:
+
+| Mode | Behaviour |
+|---|---|
+| `INSTANT` | Booking is confirmed immediately; guest gets a confirmation email |
+| `REQUEST` | Booking stays pending; provider accepts or declines from dashboard |
+| `BOTH` | Guest chooses instant or request at booking time |
+
+## Slot status colours
+
+| Colour | Status |
+|---|---|
+| Indigo | Available |
+| Blue | Booked (confirmed) |
+| Amber | Pending (awaiting approval) |
+| Slate | Blocked by provider |
+| Stone | Outside working hours |
