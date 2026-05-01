@@ -26,25 +26,29 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
     setError('')
     setSaved(false)
 
-    const res = await fetch(`/api/providers/${slug}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bio,
-        keywords: keywords.split(',').map((k) => k.trim()).filter(Boolean),
-        address: address || undefined,
-        acceptedRadiusKm: radius,
-        bookingMode,
-        isVisible,
-      }),
-    })
-
-    setLoading(false)
-    if (res.ok) {
-      setSaved(true)
-    } else {
-      const data = await res.json()
-      setError(data.error ?? 'Save failed')
+    try {
+      const res = await fetch(`/api/providers/${slug}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bio,
+          keywords: keywords.split(',').map((k) => k.trim()).filter(Boolean),
+          address: address || undefined,
+          acceptedRadiusKm: radius,
+          bookingMode,
+          isVisible,
+        }),
+      })
+      if (res.ok) {
+        setSaved(true)
+      } else {
+        const data = await res.json()
+        setError(data.error ?? 'Save failed')
+      }
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -52,8 +56,9 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-stone-700">Bio</label>
+          <label htmlFor="bio" className="text-sm font-medium text-stone-700">Bio</label>
           <textarea
+            id="bio"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
@@ -76,10 +81,11 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
         />
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-stone-700">
+          <label htmlFor="radius" className="text-sm font-medium text-stone-700">
             Accepted radius: {radius} km
           </label>
           <input
+            id="radius"
             type="range" min={5} max={100} step={5}
             value={radius}
             onChange={(e) => setRadius(Number(e.target.value))}
@@ -88,8 +94,9 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-stone-700">Booking mode</label>
+          <label htmlFor="bookingMode" className="text-sm font-medium text-stone-700">Booking mode</label>
           <select
+            id="bookingMode"
             value={bookingMode}
             onChange={(e) => setBookingMode(e.target.value)}
             className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
