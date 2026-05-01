@@ -22,7 +22,7 @@ export function BookingForm({
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function update(field: string) {
+  function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [field]: e.target.value }))
   }
@@ -31,20 +31,25 @@ export function BookingForm({
     e.preventDefault()
     setLoading(true)
     setError('')
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providerId, date, startTime, endTime, bookingType, ...form }),
-    })
-    setLoading(false)
-    if (res.ok) {
-      const data = await res.json()
-      router.push(
-        `/booking/confirmation?status=${data.status}&provider=${encodeURIComponent(providerName)}&date=${date}&start=${startTime}&end=${endTime}`
-      )
-    } else {
-      const data = await res.json()
-      setError(data.error ?? 'Booking failed. Please try again.')
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId, date, startTime, endTime, bookingType, ...form }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        router.push(
+          `/booking/confirmation?status=${data.status}&provider=${encodeURIComponent(providerName)}&date=${date}&start=${startTime}&end=${endTime}`
+        )
+      } else {
+        const data = await res.json()
+        setError(data.error ?? 'Booking failed. Please try again.')
+      }
+    } catch {
+      setError('Network error. Please check your connection and try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -87,7 +92,11 @@ export function BookingForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <Button type="submit" disabled={loading}>
-        {loading ? 'Processing…' : bookingMode === 'REQUEST' ? 'Send request' : 'Confirm booking'}
+        {loading
+          ? 'Processing…'
+          : bookingMode === 'REQUEST' || bookingType === 'REQUEST'
+            ? 'Send request'
+            : 'Confirm booking'}
       </Button>
     </form>
   )

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import type { BookingMode } from '@prisma/client'
 import { Card } from '@/components/ui/Card'
 import { BookingForm } from '@/components/booking/BookingForm'
 import { prisma } from '@/lib/prisma'
@@ -33,7 +34,7 @@ export default async function BookingPage({
           date={date}
           startTime={startTime}
           endTime={endTime}
-          bookingMode={provider.bookingMode as 'INSTANT' | 'REQUEST' | 'BOTH'}
+          bookingMode={provider.bookingMode}
         />
       </Card>
     </main>

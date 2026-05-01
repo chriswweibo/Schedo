@@ -9,6 +9,8 @@ export default function ConfirmationPage({
 }) {
   const isConfirmed = searchParams.status === 'CONFIRMED'
   const provider = searchParams.provider ?? 'the provider'
+  const date = searchParams.date ?? 'the scheduled date'
+  const start = searchParams.start ?? 'the scheduled time'
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
@@ -19,8 +21,8 @@ export default function ConfirmationPage({
         </h1>
         <p className="mb-6 text-stone-500">
           {isConfirmed
-            ? `Your booking with ${provider} on ${searchParams.date} at ${searchParams.start} is confirmed. Check your email for details.`
-            : `Your request to ${provider} for ${searchParams.date} at ${searchParams.start} has been sent. We'll email you once they respond.`}
+            ? `Your booking with ${provider} on ${date} at ${start} is confirmed. Check your email for details.`
+            : `Your request to ${provider} for ${date} at ${start} has been sent. We'll email you once they respond.`}
         </p>
         <Link href="/search">
           <Button variant="secondary">Find more providers</Button>
