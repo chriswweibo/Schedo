@@ -17,7 +17,7 @@ export function DashboardClient({
 }) {
   const [pending, setPending] = useState(initialPending)
 
-  function handleStatusChange(id: string, newStatus: 'CONFIRMED' | 'DECLINED') {
+  function handleStatusChange(id: string, _newStatus: 'CONFIRMED' | 'DECLINED') {
     setPending((prev) => prev.filter((b) => b.id !== id))
   }
 

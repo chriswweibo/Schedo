@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
@@ -13,8 +14,11 @@ export default async function DashboardPage() {
     orderBy: { date: 'asc' },
   })
 
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
   const upcoming = bookings.filter(
-    (b) => b.status === 'CONFIRMED' && new Date(b.date) >= new Date()
+    (b) => b.status === 'CONFIRMED' && new Date(b.date) >= startOfToday
   )
   const pending = bookings.filter((b) => b.status === 'PENDING')
 
@@ -22,7 +26,7 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <a href="/dashboard/settings" className="text-sm text-primary hover:underline">Settings</a>
+        <Link href="/dashboard/settings" className="text-sm text-primary hover:underline">Settings</Link>
       </div>
       <DashboardClient upcoming={upcoming} pending={pending} />
     </main>

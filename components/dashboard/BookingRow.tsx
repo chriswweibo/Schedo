@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 
 interface BookingRowProps {
@@ -19,16 +19,28 @@ export function BookingRow({
   id, guestName, guestEmail, date, startTime, endTime, status, onStatusChange,
 }: BookingRowProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleAction(newStatus: 'CONFIRMED' | 'DECLINED') {
     setLoading(newStatus)
-    await fetch(`/api/bookings/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    })
-    setLoading(null)
-    onStatusChange?.(id, newStatus)
+    setError(null)
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError((data as { error?: string }).error ?? 'Action failed. Please try again.')
+        return
+      }
+      onStatusChange?.(id, newStatus)
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(null)
+    }
   }
 
   return (
@@ -40,7 +52,7 @@ export function BookingRow({
           {format(new Date(date), 'MMMM d, yyyy')} · {startTime}–{endTime}
         </p>
       </div>
-      <Badge variant={status.toLowerCase() as any} />
+      <Badge variant={status.toLowerCase() as BadgeVariant} />
       {status === 'PENDING' && (
         <div className="flex gap-2">
           <Button
@@ -59,6 +71,7 @@ export function BookingRow({
           </Button>
         </div>
       )}
+      {error && <p className="w-full text-xs text-red-600">{error}</p>}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-type BadgeVariant = 'pending' | 'confirmed' | 'declined' | 'cancelled'
+export type BadgeVariant = 'pending' | 'confirmed' | 'declined' | 'cancelled'
 
 const styles: Record<BadgeVariant, string> = {
   pending: 'bg-amber-100 text-amber-800',
