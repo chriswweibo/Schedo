@@ -6,14 +6,12 @@ import {
   addMonths, subMonths, isToday, isBefore, startOfDay
 } from 'date-fns'
 import { getRange } from '@/lib/slotRange'
+import type { TimeSlot } from '@/lib/availability'
 
 interface ProviderCalendarProps {
   providerId: string
   availability: Array<{ dayOfWeek: number; isActive: boolean }>
 }
-
-type SlotStatus = 'available' | 'booked' | 'blocked' | 'outside'
-interface TimeSlot { startTime: string; endTime: string; status: SlotStatus }
 
 type SelectionState =
   | { phase: 'idle' }
@@ -31,11 +29,13 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
   const [fullyBookedDays, setFullyBookedDays] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
+    const controller = new AbortController()
     const monthKey = format(month, 'yyyy-MM')
-    fetch(`/api/availability/${providerId}?month=${monthKey}`)
+    fetch(`/api/availability/${providerId}?month=${monthKey}`, { signal: controller.signal })
       .then((r) => r.ok ? r.json() : {})
       .then(setFullyBookedDays)
-      .catch(() => setFullyBookedDays({}))
+      .catch((err) => { if (err.name !== 'AbortError') setFullyBookedDays({}) })
+    return () => controller.abort()
   }, [providerId, month])
 
   const today = startOfDay(new Date())
@@ -84,24 +84,27 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
     return new Set(range.map((s) => s.startTime))
   }, [slots, selection, hoverKey])
 
-  const selectionSet = useMemo<Set<string>>(() => {
-    if (selection.phase !== 'selected') return new Set()
-    const range = getRange(slots, selection.startKey, selection.endKey)
-    if (!range) return new Set()
-    return new Set(range.map((s) => s.startTime))
+  const selectionRange = useMemo<TimeSlot[] | null>(() => {
+    if (selection.phase !== 'selected') return null
+    return getRange(slots, selection.startKey, selection.endKey)
   }, [slots, selection])
+
+  const selectionSet = useMemo<Set<string>>(() => {
+    if (!selectionRange) return new Set()
+    return new Set(selectionRange.map((s) => s.startTime))
+  }, [selectionRange])
 
   return (
     <div>
       {/* Month nav */}
       <div className="flex items-center justify-between mb-1.5">
         <button
-          onClick={() => setMonth(subMonths(month, 1))}
+          onClick={() => { setMonth(subMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }}
           disabled={isCurrentMonth}
           className="p-0.5 text-stone-500 hover:text-stone-900 disabled:opacity-30 disabled:cursor-default"
         >←</button>
         <span className="text-sm font-semibold">{format(month, 'MMMM yyyy')}</span>
-        <button onClick={() => setMonth(addMonths(month, 1))} className="p-0.5 text-stone-500 hover:text-stone-900">→</button>
+        <button onClick={() => { setMonth(addMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }} className="p-0.5 text-stone-500 hover:text-stone-900">→</button>
       </div>
 
       {/* Day labels */}
@@ -215,8 +218,8 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                           return
                         }
 
-                        // phase === 'selected' — any click resets
-                        setSelection({ phase: 'idle' })
+                        // phase === 'selected' — clicking a new slot re-anchors immediately
+                        setSelection({ phase: 'anchored', anchorKey: key })
                         setHoverKey(null)
                       }}
                       className={cls}
@@ -227,17 +230,15 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                 })}
               </div>
 
-              {selection.phase === 'selected' && (() => {
-                const range = getRange(slots, selection.startKey, selection.endKey)
-                if (!range || range.length === 0) return null
-                const startTime = range[0].startTime
-                const endTime   = range[range.length - 1].endTime
+              {selectionRange && selectionRange.length > 0 && (() => {
+                const startTime = selectionRange[0].startTime
+                const endTime   = selectionRange[selectionRange.length - 1].endTime
                 return (
                   <Link
                     href={`/booking/${providerId}?date=${format(selectedDate!, 'yyyy-MM-dd')}&start=${startTime}&end=${endTime}`}
                     className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
                   >
-                    Book {startTime}–{endTime} · {range.length}h
+                    Book {startTime}–{endTime} · {selectionRange.length}h
                   </Link>
                 )
               })()}
