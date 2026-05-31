@@ -1,10 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format,
   addMonths, subMonths, isToday, isBefore, startOfDay
 } from 'date-fns'
+import { getRange } from '@/lib/slotRange'
 
 interface ProviderCalendarProps {
   providerId: string
@@ -14,13 +15,28 @@ interface ProviderCalendarProps {
 type SlotStatus = 'available' | 'booked' | 'blocked' | 'outside'
 interface TimeSlot { startTime: string; endTime: string; status: SlotStatus }
 
+type SelectionState =
+  | { phase: 'idle' }
+  | { phase: 'anchored'; anchorKey: string }
+  | { phase: 'selected'; startKey: string; endKey: string }
+
 export function ProviderCalendar({ providerId, availability }: ProviderCalendarProps) {
   const [month, setMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+  const [selection, setSelection] = useState<SelectionState>({ phase: 'idle' })
+  const [hoverKey, setHoverKey] = useState<string | null>(null)
   const [slots, setSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [slotsError, setSlotsError] = useState<string | null>(null)
+  const [fullyBookedDays, setFullyBookedDays] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    const monthKey = format(month, 'yyyy-MM')
+    fetch(`/api/availability/${providerId}?month=${monthKey}`)
+      .then((r) => r.ok ? r.json() : {})
+      .then(setFullyBookedDays)
+      .catch(() => setFullyBookedDays({}))
+  }, [providerId, month])
 
   const today = startOfDay(new Date())
 
@@ -41,7 +57,8 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
     if (!activeDays.has(day.getDay())) return
     if (isBefore(day, today)) return
     setSelectedDate(day)
-    setSelectedKeys(new Set())
+    setSelection({ phase: 'idle' })
+    setHoverKey(null)
     setLoadingSlots(true)
     setSlotsError(null)
     const dateStr = format(day, 'yyyy-MM-dd')
@@ -57,6 +74,22 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
       setLoadingSlots(false)
     }
   }
+
+  const previewSet = useMemo<Set<string>>(() => {
+    if (selection.phase !== 'anchored' || !hoverKey || hoverKey === selection.anchorKey) {
+      return new Set()
+    }
+    const range = getRange(slots, selection.anchorKey, hoverKey)
+    if (!range) return new Set()
+    return new Set(range.map((s) => s.startTime))
+  }, [slots, selection, hoverKey])
+
+  const selectionSet = useMemo<Set<string>>(() => {
+    if (selection.phase !== 'selected') return new Set()
+    const range = getRange(slots, selection.startKey, selection.endKey)
+    if (!range) return new Set()
+    return new Set(range.map((s) => s.startTime))
+  }, [slots, selection])
 
   return (
     <div>
@@ -84,16 +117,20 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
         {days.map((day) => {
           const isAvail = activeDays.has(day.getDay())
           const isPast = isBefore(day, today)
-          const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
+          const dateKey = format(day, 'yyyy-MM-dd')
+          const isFullyBooked = isAvail && !isPast && fullyBookedDays[dateKey] === true
+          const isSelected = selectedDate && dateKey === format(selectedDate, 'yyyy-MM-dd')
+          const isClickable = isAvail && !isPast && !isFullyBooked
 
           return (
             <button
               key={day.toISOString()}
               onClick={() => handleDayClick(day)}
-              disabled={!isAvail || isPast}
+              disabled={!isClickable}
               className={`rounded py-1 text-xs transition
                 ${isSelected ? 'bg-primary text-white' : ''}
-                ${isAvail && !isPast && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-white' : ''}
+                ${isClickable && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-white' : ''}
+                ${isFullyBooked ? 'bg-stone-200 text-stone-400 cursor-default' : ''}
                 ${!isAvail || isPast ? 'text-stone-300 cursor-default' : ''}
                 ${isToday(day) && !isSelected ? 'font-bold' : ''}
               `}
@@ -113,9 +150,9 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
             </p>
             {/* Legend */}
             <div className="flex items-center gap-2 text-[10px] text-stone-400">
-              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-indigo-500" /> Avail</span>
-              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-stone-200" /> Unavail</span>
-              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-blue-200" /> Booked</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-blue-500" /> Available</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-amber-400" /> Booked</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-stone-300" /> Unavailable</span>
             </div>
           </div>
 
@@ -131,30 +168,56 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
             <>
               <div className="grid grid-cols-4 gap-1.5">
                 {slots.map((slot) => {
-                  const key = `${slot.startTime}-${slot.endTime}`
-                  const isSelected = selectedKeys.has(key)
+                  const key = slot.startTime
                   const isAvailable = slot.status === 'available'
+                  const isAnchor    = selection.phase === 'anchored' && selection.anchorKey === key
+                  const inPreview   = previewSet.has(key)
+                  const inSelection = selectionSet.has(key)
 
                   let cls = 'h-8 rounded-lg text-[11px] font-medium transition-all '
-                  if (slot.status === 'outside')   cls += 'bg-stone-100 text-stone-300 cursor-default'
-                  else if (slot.status === 'booked')   cls += 'bg-blue-100 text-blue-400 cursor-default'
-                  else if (slot.status === 'blocked')  cls += 'bg-stone-200 text-stone-400 cursor-default'
-                  else if (isSelected) cls += 'bg-indigo-600 text-white shadow-sm scale-[1.03]'
-                  else cls += 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 cursor-pointer'
+                  if (slot.status === 'outside')      cls += 'bg-stone-100 text-stone-300 cursor-default'
+                  else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 cursor-default line-through'
+                  else if (slot.status === 'blocked') cls += 'bg-stone-200 text-stone-400 cursor-default'
+                  else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
+                  else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
+                  else if (inPreview)                 cls += 'bg-indigo-400 text-white opacity-75'
+                  else                                cls += 'bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer'
 
                   return (
                     <button
                       key={key}
                       type="button"
                       disabled={!isAvailable}
+                      aria-label={`${slot.startTime} – ${slot.status}`}
+                      onMouseEnter={() => { if (isAvailable) setHoverKey(key) }}
+                      onMouseLeave={() => setHoverKey(null)}
                       onClick={() => {
                         if (!isAvailable) return
-                        setSelectedKeys((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(key)) next.delete(key)
-                          else next.add(key)
-                          return next
-                        })
+
+                        if (selection.phase === 'idle') {
+                          setSelection({ phase: 'anchored', anchorKey: key })
+                          return
+                        }
+
+                        if (selection.phase === 'anchored') {
+                          if (key === selection.anchorKey) {
+                            setSelection({ phase: 'idle' })
+                            return
+                          }
+                          const range = getRange(slots, selection.anchorKey, key)
+                          if (range) {
+                            setSelection({
+                              phase: 'selected',
+                              startKey: range[0].startTime,
+                              endKey: range[range.length - 1].startTime,
+                            })
+                          }
+                          return
+                        }
+
+                        // phase === 'selected' — any click resets
+                        setSelection({ phase: 'idle' })
+                        setHoverKey(null)
                       }}
                       className={cls}
                     >
@@ -164,16 +227,17 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                 })}
               </div>
 
-              {selectedKeys.size > 0 && (() => {
-                const selected = slots.filter((s) => selectedKeys.has(`${s.startTime}-${s.endTime}`))
-                const startTime = selected[0].startTime
-                const endTime   = selected[selected.length - 1].endTime
+              {selection.phase === 'selected' && (() => {
+                const range = getRange(slots, selection.startKey, selection.endKey)
+                if (!range || range.length === 0) return null
+                const startTime = range[0].startTime
+                const endTime   = range[range.length - 1].endTime
                 return (
                   <Link
-                    href={`/booking/${providerId}?date=${format(selectedDate, 'yyyy-MM-dd')}&start=${startTime}&end=${endTime}`}
-                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                    href={`/booking/${providerId}?date=${format(selectedDate!, 'yyyy-MM-dd')}&start=${startTime}&end=${endTime}`}
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
                   >
-                    Book {startTime}–{endTime} · {selected.length}h
+                    Book {startTime}–{endTime} · {range.length}h
                   </Link>
                 )
               })()}
