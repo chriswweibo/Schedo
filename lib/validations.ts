@@ -28,3 +28,19 @@ export const UpdateProviderSettingsSchema = z.object({
   isVisible: z.boolean().optional(),
   bookingMode: z.enum(['INSTANT', 'REQUEST', 'BOTH']).optional(),
 })
+
+export const ManageBookingSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('cancel') }),
+  z.object({
+    action: z.literal('reschedule'),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/),
+    endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  }),
+  z.object({
+    action: z.literal('edit'),
+    guestName: z.string().min(1).optional(),
+    guestPhone: z.string().optional(),
+    notes: z.string().optional(),
+  }),
+])
