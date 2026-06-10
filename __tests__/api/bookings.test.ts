@@ -107,6 +107,27 @@ describe('POST /api/bookings', () => {
     const data = await res.json()
     expect(data.status).toBe('CONFIRMED')
   })
+
+  it('generates a manageToken on the created booking', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
+    })
+    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    })
+    await POST(req)
+
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ manageToken: expect.stringMatching(/^[0-9a-f]{48}$/) }),
+      })
+    )
+  })
 })
 
 describe('PATCH /api/bookings/[id]', () => {

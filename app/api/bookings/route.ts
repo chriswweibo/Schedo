@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { parseISO, startOfDay, endOfDay, format } from 'date-fns'
 import { prisma } from '@/lib/prisma'
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
         providerId, date, startTime, endTime,
         guestName, guestEmail, guestPhone, notes,
         status: isInstant ? 'CONFIRMED' : 'PENDING',
+        manageToken: randomBytes(24).toString('hex'),
       },
     })
 
