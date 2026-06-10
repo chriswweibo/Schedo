@@ -114,9 +114,21 @@ export async function PATCH(
       )
     }
 
-    const isInstant =
-      booking.provider.bookingMode === 'INSTANT' || booking.provider.bookingMode === 'BOTH'
-    const newStatus = isInstant ? 'CONFIRMED' : 'PENDING'
+    // Reschedule status:
+    //  - INSTANT provider  -> auto-confirm
+    //  - REQUEST provider  -> always needs (re-)approval
+    //  - BOTH provider     -> preserve the booking's existing nature:
+    //      an already-CONFIRMED (instant) booking stays confirmed;
+    //      a PENDING (request) booking stays pending for approval
+    let newStatus: 'CONFIRMED' | 'PENDING'
+    if (booking.provider.bookingMode === 'INSTANT') {
+      newStatus = 'CONFIRMED'
+    } else if (booking.provider.bookingMode === 'REQUEST') {
+      newStatus = 'PENDING'
+    } else {
+      newStatus = booking.status === 'CONFIRMED' ? 'CONFIRMED' : 'PENDING'
+    }
+    const pending = newStatus === 'PENDING'
 
     const updated = await prisma.booking.update({
       where: { id: booking.id },
@@ -133,7 +145,7 @@ export async function PATCH(
       endTime: data.endTime,
       profession: booking.provider.profession,
       manageToken: booking.manageToken ?? undefined,
-      pending: !isInstant,
+      pending,
     }).catch((err) => console.error('[manage] reschedule email failed:', err))
 
     return NextResponse.json(updated)

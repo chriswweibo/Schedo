@@ -120,4 +120,36 @@ describe('PATCH /api/bookings/manage/[token]', () => {
     const res = await patch('tok123', { action: 'cancel' })
     expect(res.status).toBe(409)
   })
+
+  it('reschedule keeps a CONFIRMED booking CONFIRMED for a BOTH provider', async () => {
+    ;(prisma.booking.findUnique as jest.Mock).mockResolvedValue(
+      bookingRow({ status: 'CONFIRMED', provider: { name: 'Bob', email: 'bob@example.com', profession: 'Plumber', bookingMode: 'BOTH' } })
+    )
+    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.booking.update as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+    const res = await patch('tok123', {
+      action: 'reschedule', date: futureDateStr, startTime: '14:00', endTime: '15:00',
+    })
+    expect(res.status).toBe(200)
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'CONFIRMED' }) })
+    )
+  })
+
+  it('reschedule keeps a PENDING booking PENDING for a BOTH provider', async () => {
+    ;(prisma.booking.findUnique as jest.Mock).mockResolvedValue(
+      bookingRow({ status: 'PENDING', provider: { name: 'Bob', email: 'bob@example.com', profession: 'Plumber', bookingMode: 'BOTH' } })
+    )
+    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.booking.update as jest.Mock).mockResolvedValue({ id: 'b1', status: 'PENDING' })
+    const res = await patch('tok123', {
+      action: 'reschedule', date: futureDateStr, startTime: '14:00', endTime: '15:00',
+    })
+    expect(res.status).toBe(200)
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING' }) })
+    )
+  })
 })
