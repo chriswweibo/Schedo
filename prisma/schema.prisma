@@ -55,6 +55,7 @@ model Booking {
   endTime    String
   status     BookingStatus @default(PENDING)
   notes      String?
+  manageToken String?      @unique
   createdAt  DateTime      @default(now())
 
   @@index([providerId, date, status])
