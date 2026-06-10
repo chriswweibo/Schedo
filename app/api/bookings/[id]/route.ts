@@ -43,6 +43,7 @@ export async function PATCH(
         startTime: booking.startTime,
         endTime: booking.endTime,
         profession: booking.provider.profession,
+        manageToken: booking.manageToken ?? undefined,
       }).catch((err) => console.error('[email] sendRequestAccepted failed:', err))
     } else if (status === 'DECLINED') {
       sendRequestDeclined({

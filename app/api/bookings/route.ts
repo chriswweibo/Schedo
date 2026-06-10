@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       guestEmail, guestName, providerName: provider.name,
       providerEmail: provider.email, date: formattedDate,
       startTime, endTime, profession: provider.profession,
+      manageToken: booking.manageToken ?? undefined,
     }
 
     if (isInstant) {
