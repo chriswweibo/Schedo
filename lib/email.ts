@@ -1,11 +1,17 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) return null
-  return new Resend(process.env.RESEND_API_KEY)
+function getTransport() {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
 }
 
-const FROM = process.env.RESEND_FROM ?? 'Schedo <noreply@schedo.app>'
+const FROM = `Schedo <${process.env.GMAIL_USER ?? 'noreply@schedo.app'}>`
 
 interface BookingEmailParams {
   guestEmail: string
@@ -19,10 +25,10 @@ interface BookingEmailParams {
 }
 
 export async function sendInstantConfirmation(p: BookingEmailParams) {
-  const resend = getResend()
-  if (!resend) return
+  const transport = getTransport()
+  if (!transport) return
   await Promise.all([
-    resend.emails.send({
+    transport.sendMail({
       from: FROM,
       to: p.guestEmail,
       subject: `Booking confirmed with ${p.providerName}`,
@@ -32,7 +38,7 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
 <p>— Schedo</p>`,
     }),
     p.providerEmail &&
-      resend.emails.send({
+      transport.sendMail({
         from: FROM,
         to: p.providerEmail,
         subject: `New booking from ${p.guestName}`,
@@ -44,10 +50,10 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
 }
 
 export async function sendRequestSubmitted(p: BookingEmailParams) {
-  const resend = getResend()
-  if (!resend) return
+  const transport = getTransport()
+  if (!transport) return
   await Promise.all([
-    resend.emails.send({
+    transport.sendMail({
       from: FROM,
       to: p.guestEmail,
       subject: `Booking request sent to ${p.providerName}`,
@@ -57,7 +63,7 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
 <p>We'll let you know once they confirm. — Schedo</p>`,
     }),
     p.providerEmail &&
-      resend.emails.send({
+      transport.sendMail({
         from: FROM,
         to: p.providerEmail,
         subject: `New booking request from ${p.guestName}`,
@@ -68,18 +74,29 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
   ])
 }
 
-export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerEmail'>) {
-  const resend = getResend()
-  if (!resend) return
-  await resend.emails.send({
-    from: FROM,
-    to: p.guestEmail,
-    subject: `Booking confirmed — ${p.providerName} accepted your request`,
-    html: `<p>Hi ${p.guestName},</p>
+export async function sendRequestAccepted(p: BookingEmailParams) {
+  const transport = getTransport()
+  if (!transport) return
+  await Promise.all([
+    transport.sendMail({
+      from: FROM,
+      to: p.guestEmail,
+      subject: `Booking confirmed — ${p.providerName} accepted your request`,
+      html: `<p>Hi ${p.guestName},</p>
 <p>Great news! <strong>${p.providerName}</strong> has confirmed your booking.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
 <p>— Schedo</p>`,
-  })
+    }),
+    p.providerEmail &&
+      transport.sendMail({
+        from: FROM,
+        to: p.providerEmail,
+        subject: `Booking confirmed with ${p.guestName}`,
+        html: `<p>You confirmed a booking with <strong>${p.guestName}</strong>.</p>
+<p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
+<p>View it in your <a href="${process.env.NEXTAUTH_URL}/dashboard">dashboard</a>.</p>`,
+      }),
+  ])
 }
 
 export async function sendRequestDeclined(p: {
@@ -88,9 +105,9 @@ export async function sendRequestDeclined(p: {
   providerName: string
   date: string
 }) {
-  const resend = getResend()
-  if (!resend) return
-  await resend.emails.send({
+  const transport = getTransport()
+  if (!transport) return
+  await transport.sendMail({
     from: FROM,
     to: p.guestEmail,
     subject: `Booking request declined`,

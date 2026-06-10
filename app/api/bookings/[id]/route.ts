@@ -15,7 +15,7 @@ export async function PATCH(
 
     const booking = await prisma.booking.findUnique({
       where: { id: params.id },
-      include: { provider: { select: { name: true, profession: true, id: true } } },
+      include: { provider: { select: { name: true, profession: true, id: true, email: true } } },
     })
     if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     if (booking.providerId !== session.user.id) {
@@ -34,22 +34,23 @@ export async function PATCH(
 
     const formattedDate = format(booking.date, 'MMMM d, yyyy')
     if (status === 'CONFIRMED') {
-      await sendRequestAccepted({
+      sendRequestAccepted({
         guestEmail: booking.guestEmail,
         guestName: booking.guestName,
         providerName: booking.provider.name,
+        providerEmail: booking.provider.email,
         date: formattedDate,
         startTime: booking.startTime,
         endTime: booking.endTime,
         profession: booking.provider.profession,
-      })
+      }).catch((err) => console.error('[email] sendRequestAccepted failed:', err))
     } else if (status === 'DECLINED') {
-      await sendRequestDeclined({
+      sendRequestDeclined({
         guestEmail: booking.guestEmail,
         guestName: booking.guestName,
         providerName: booking.provider.name,
         date: formattedDate,
-      })
+      }).catch((err) => console.error('[email] sendRequestDeclined failed:', err))
     }
 
     return NextResponse.json(updated)

@@ -14,14 +14,15 @@ jest.mock('@/lib/prisma', () => ({
 }))
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }))
 jest.mock('@/lib/email', () => ({
-  sendInstantConfirmation: jest.fn(),
-  sendRequestSubmitted: jest.fn(),
-  sendRequestAccepted: jest.fn(),
-  sendRequestDeclined: jest.fn(),
+  sendInstantConfirmation: jest.fn().mockResolvedValue(undefined),
+  sendRequestSubmitted: jest.fn().mockResolvedValue(undefined),
+  sendRequestAccepted: jest.fn().mockResolvedValue(undefined),
+  sendRequestDeclined: jest.fn().mockResolvedValue(undefined),
 }))
 
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
+import { sendRequestAccepted } from '@/lib/email'
 
 const validBody = {
   providerId: 'p1',
@@ -127,6 +128,30 @@ describe('PATCH /api/bookings/[id]', () => {
     })
     const res = await PATCH(req, { params: { id: 'b1' } })
     expect(res.status).toBe(200)
+  })
+
+  it('emails both guest and provider registered email on accept', async () => {
+    ;(getServerSession as jest.Mock).mockResolvedValue({ user: { id: 'p1', slug: 'bob' } })
+    ;(prisma.booking.findUnique as jest.Mock).mockResolvedValue({
+      id: 'b1', providerId: 'p1', status: 'PENDING',
+      guestEmail: 'alice@example.com', guestName: 'Alice',
+      provider: { name: 'Bob', profession: 'Plumber', id: 'p1', email: 'bob@example.com' },
+      date: new Date('2026-05-04'), startTime: '10:00', endTime: '11:00',
+    })
+    ;(prisma.booking.update as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+
+    const req = new NextRequest('http://localhost/api/bookings/b1', {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'CONFIRMED' }),
+    })
+    const res = await PATCH(req, { params: { id: 'b1' } })
+    expect(res.status).toBe(200)
+    expect(sendRequestAccepted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        guestEmail: 'alice@example.com',
+        providerEmail: 'bob@example.com',
+      })
+    )
   })
 
   it('returns 401 when not authenticated', async () => {

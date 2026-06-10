@@ -67,13 +67,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (isInstant) {
-      await sendInstantConfirmation(emailParams)
+      sendInstantConfirmation(emailParams).catch((err) =>
+        console.error('[email] sendInstantConfirmation failed:', err)
+      )
     } else {
-      await sendRequestSubmitted(emailParams)
+      sendRequestSubmitted(emailParams).catch((err) =>
+        console.error('[email] sendRequestSubmitted failed:', err)
+      )
     }
 
     return NextResponse.json(booking, { status: 201 })
-  } catch {
+  } catch (err) {
+    console.error('[bookings] POST error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
