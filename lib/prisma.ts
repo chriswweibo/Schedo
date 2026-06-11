@@ -11,6 +11,12 @@ const ENCRYPT_DECRYPT_OPS = [
 function createClient() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL })
   const adapter = new PrismaPg(pool)
+  // Transparent at-rest encryption of Booking guest PII. NOTE: this hook is
+  // scoped to the `booking` model, so it only fires for direct booking queries.
+  // Reading bookings NESTED under another model (e.g.
+  // `prisma.provider.findUnique({ include: { bookings: true } })`) bypasses this
+  // hook and would expose `v1:` ciphertext — decrypt such rows explicitly with
+  // openBookingResult() from lib/bookingCrypto, or query bookings directly.
   return new PrismaClient({ adapter }).$extends({
     query: {
       booking: {
