@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 function LoginForm() {
   const router = useRouter()
@@ -87,6 +88,9 @@ function LoginForm() {
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
+          <div className="mt-4">
+            <GoogleButton />
+          </div>
         </div>
       </div>
     </div>

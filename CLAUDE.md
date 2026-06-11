@@ -29,6 +29,8 @@ Copy `.env.local.example` to `.env.local`. Required keys:
 - `NEXT_PUBLIC_MAPBOX_TOKEN` + `MAPBOX_TOKEN` — same Mapbox token, used in browser and server-side geocoding respectively
 - `GMAIL_USER` / `GMAIL_APP_PASSWORD` — Gmail SMTP for transactional email via nodemailer. `GMAIL_APP_PASSWORD` must be a 16-char Google App Password (requires 2-Step Verification on the account), not the regular account password. If either is unset, email sending is a silent no-op.
 - `ENCRYPTION_KEY` — base64 32-byte key used to encrypt guest PII (`Booking.guestName/guestEmail/guestPhone/notes`) at rest via AES-256-GCM. If unset, the app throws when writing guest PII (it will not silently store plaintext).
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth (provider sign-in + Calendar sync). When unset, the Google provider is not registered and the feature is dormant. Redirect URI: `<NEXTAUTH_URL>/api/auth/callback/google`.
+- `NEXT_PUBLIC_GOOGLE_ENABLED` — `"true"` to render the "Continue with Google" buttons.
 
 ## Architecture
 

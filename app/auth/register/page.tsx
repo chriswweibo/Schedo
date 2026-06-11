@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
+import { GoogleButton } from '@/components/auth/GoogleButton'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -111,6 +112,9 @@ export default function RegisterPage() {
               {loading ? 'Creating account…' : 'Create account'}
             </Button>
           </form>
+          <div className="mt-4">
+            <GoogleButton label="Sign up with Google" />
+          </div>
         </div>
       </div>
     </div>
