@@ -1,9 +1,10 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { BookingRow } from '@/components/dashboard/BookingRow'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { WorksCarousel } from '@/components/provider/WorksCarousel'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -26,6 +27,7 @@ type Provider = {
   id: string; name: string; slug: string; bio: string | null;
   profession: string; keywords: string[]; lat: number | null; lng: number | null;
   acceptedRadiusKm: number; bookingMode: string; isVisible: boolean;
+  googleId?: string | null;
   availability: Availability[]
 }
 
@@ -40,24 +42,35 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 
 export function DashboardClient({
   provider: initialProvider,
-  pending: initialPending,
-  upcoming,
+  upcoming: initialUpcoming,
   jobs: initialJobs,
   slug,
+  googleConnected = false,
 }: {
   provider: Provider
-  pending: Booking[]
   upcoming: Booking[]
   jobs: Job[]
   slug: string
+  googleConnected?: boolean
 }) {
   const [tab, setTab] = useState<Tab>('inbox')
-  const [pending, setPending] = useState(initialPending)
+  const [upcoming, setUpcoming] = useState(initialUpcoming)
   const [provider, setProvider] = useState(initialProvider)
   const [jobs, setJobs] = useState<Job[]>(initialJobs)
 
-  function handleStatusChange(id: string) {
-    setPending((prev) => prev.filter((b) => b.id !== id))
+  const didSync = useRef(false)
+  useEffect(() => {
+    if (!googleConnected || didSync.current) return
+    didSync.current = true
+    fetch('/api/me/calendar/sync', { method: 'POST' }).catch(() => {})
+  }, [googleConnected])
+
+  const pendingCount = upcoming.filter((b) => b.status === 'PENDING').length
+
+  function handleStatusChange(id: string, newStatus: 'CONFIRMED' | 'DECLINED') {
+    setUpcoming((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
+    )
   }
 
   return (
@@ -77,9 +90,9 @@ export function DashboardClient({
           >
             <span>{t.icon}</span>
             {t.label}
-            {t.id === 'inbox' && pending.length > 0 && (
+            {t.id === 'inbox' && pendingCount > 0 && (
               <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-xs text-white leading-none">
-                {pending.length}
+                {pendingCount}
               </span>
             )}
           </button>
@@ -110,7 +123,6 @@ export function DashboardClient({
 
         {tab === 'inbox' && (
           <InboxTab
-            pending={pending}
             upcoming={upcoming}
             onStatusChange={handleStatusChange}
           />
@@ -137,43 +149,25 @@ export function DashboardClient({
 
 /* ── Inbox ─────────────────────────────────────────────── */
 function InboxTab({
-  pending, upcoming, onStatusChange,
+  upcoming, onStatusChange,
 }: {
-  pending: Booking[]
   upcoming: Booking[]
-  onStatusChange: (id: string) => void
+  onStatusChange: (id: string, newStatus: 'CONFIRMED' | 'DECLINED') => void
 }) {
   return (
-    <div className="flex flex-col gap-10">
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
-          Pending requests {pending.length > 0 && `(${pending.length})`}
-        </h2>
-        {pending.length === 0 ? (
-          <p className="text-stone-400 text-sm">No pending requests.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {pending.map((b) => (
-              <BookingRow key={b.id} {...b} onStatusChange={() => onStatusChange(b.id)} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
-          Upcoming bookings {upcoming.length > 0 && `(${upcoming.length})`}
-        </h2>
-        {upcoming.length === 0 ? (
-          <p className="text-stone-400 text-sm">No upcoming bookings.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {upcoming.map((b) => (
-              <BookingRow key={b.id} {...b} />
-            ))}
-          </div>
-        )}
-      </section>
+    <div className="flex flex-col gap-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+        Upcoming bookings {upcoming.length > 0 && `(${upcoming.length})`}
+      </h2>
+      {upcoming.length === 0 ? (
+        <p className="text-stone-400 text-sm">No upcoming bookings.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {upcoming.map((b) => (
+            <BookingRow key={b.id} {...b} onStatusChange={onStatusChange} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -392,6 +386,13 @@ function PastWorkSection({
     <Card className="p-6">
       <h2 className="text-base font-semibold mb-4">Past work</h2>
 
+      {/* Carousel */}
+      {jobs.length > 0 && (
+        <div className="mb-6">
+          <WorksCarousel jobs={jobs} />
+        </div>
+      )}
+
       {/* Upload form */}
       <form onSubmit={handleAdd} className="flex flex-col gap-3 mb-6">
         {/* Image drop zone */}
@@ -438,37 +439,39 @@ function PastWorkSection({
         </Button>
       </form>
 
-      {/* Existing jobs */}
+      {/* Manage uploads */}
       {jobs.length === 0 ? (
         <p className="text-sm text-stone-400">No past work added yet.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {jobs.map((job) => (
-            <div key={job.id} className="relative rounded-xl border border-stone-200 overflow-hidden group">
-              {job.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={job.imageUrl} alt={job.title} className="h-32 w-full object-cover" />
-              )}
-              <div className="p-3">
-                <p className="text-sm font-semibold">{job.title}</p>
-                {job.description && (
-                  <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{job.description}</p>
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">Manage uploads</p>
+          <div className="flex flex-col gap-2">
+            {jobs.map((job) => (
+              <div key={job.id} className="flex items-center gap-3 rounded-xl border border-stone-200 p-2 group">
+                {job.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={job.imageUrl} alt={job.title} className="h-12 w-16 rounded-lg object-cover shrink-0" />
+                ) : (
+                  <div className="h-12 w-16 rounded-lg bg-stone-100 shrink-0 flex items-center justify-center text-stone-300 text-xl">🔧</div>
                 )}
-                <p className="text-xs text-stone-400 mt-1">
-                  {new Date(job.completedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{job.title}</p>
+                  <p className="text-xs text-stone-400">
+                    {new Date(job.completedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(job.id)}
+                  className="shrink-0 rounded-full p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                  title="Delete"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(job.id)}
-                className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white opacity-0 group-hover:opacity-100 transition text-xs leading-none"
-                title="Delete"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </Card>
   )

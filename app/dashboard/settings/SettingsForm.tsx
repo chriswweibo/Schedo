@@ -9,7 +9,17 @@ interface Provider {
   acceptedRadiusKm: number; bookingMode: string; isVisible: boolean;
 }
 
-export function SettingsForm({ provider, slug }: { provider: Provider; slug: string }) {
+export function SettingsForm({
+  provider,
+  slug,
+  googleConnected = false,
+  googleSyncedAt = null,
+}: {
+  provider: Provider
+  slug: string
+  googleConnected?: boolean
+  googleSyncedAt?: string | null
+}) {
   const [bio, setBio] = useState(provider.bio ?? '')
   const [keywords, setKeywords] = useState(provider.keywords.join(', '))
   const [address, setAddress] = useState('')
@@ -19,6 +29,8 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -127,6 +139,40 @@ export function SettingsForm({ provider, slug }: { provider: Provider; slug: str
           {loading ? 'Saving…' : 'Save settings'}
         </Button>
       </form>
+
+      {googleConnected && (
+        <section className="flex flex-col gap-2 border-t border-stone-200 pt-6 mt-2">
+          <h2 className="text-lg font-semibold">Google Calendar</h2>
+          <p className="text-sm text-stone-500">
+            {syncMessage ??
+              (googleSyncedAt
+                ? `Last synced ${new Date(googleSyncedAt).toLocaleString()}`
+                : 'Connected — not synced yet')}
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={syncing}
+              onClick={async () => {
+                setSyncing(true)
+                setSyncMessage(null)
+                try {
+                  const res = await fetch('/api/me/calendar/sync', { method: 'POST' })
+                  const data = await res.json()
+                  setSyncMessage(res.ok ? `Synced — ${data.blockCount} blocked time(s).` : (data.error ?? 'Sync failed'))
+                } catch {
+                  setSyncMessage('Network error during sync.')
+                } finally {
+                  setSyncing(false)
+                }
+              }}
+            >
+              {syncing ? 'Syncing…' : 'Sync now'}
+            </Button>
+          </div>
+        </section>
+      )}
     </Card>
   )
 }
