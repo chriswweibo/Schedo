@@ -1,7 +1,11 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
+import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from './prisma'
+import { upsertGoogleProvider } from './googleAuth'
+import { verifyProviderCredentials } from './credentialsAuth'
+
+const googleEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
@@ -14,26 +18,56 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
-        const provider = await prisma.provider.findUnique({
-          where: { email: credentials.email },
-        })
-        if (!provider) return null
-        const valid = await bcrypt.compare(credentials.password, provider.passwordHash)
-        if (!valid) return null
-        return {
-          id: provider.id,
-          email: provider.email,
-          name: provider.name,
-          slug: provider.slug,
-        }
+        return verifyProviderCredentials(credentials.email, credentials.password)
       },
     }),
+    ...(googleEnabled
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            authorization: {
+              params: {
+                access_type: 'offline',
+                prompt: 'consent',
+                scope:
+                  'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+              },
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async signIn({ account, profile }) {
+      if (account?.provider !== 'google') return true
+      const email = profile?.email
+      const verified = (profile as { email_verified?: boolean } | null)?.email_verified
+      if (!email || verified !== true) return false
+      await upsertGoogleProvider({
+        email,
+        name: profile?.name ?? email.split('@')[0],
+        googleId: account.providerAccountId,
+        accessToken: account.access_token ?? null,
+        refreshToken: account.refresh_token ?? null,
+        expiresAtSec: account.expires_at ?? null,
+      })
+      return true
+    },
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.id = user.id
         token.slug = user.slug
+      }
+      if (account?.provider === 'google' && profile?.email) {
+        const p = await prisma.provider.findUnique({
+          where: { email: profile.email },
+          select: { id: true, slug: true },
+        })
+        if (p) {
+          token.id = p.id
+          token.slug = p.slug
+        }
       }
       return token
     },
