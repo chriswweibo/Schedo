@@ -1,0 +1,55 @@
+const SKEW_MS = 60_000
+const DAY_MS = 24 * 60 * 60 * 1000
+
+export interface BusyInterval { start: Date; end: Date }
+export interface BlockDescriptor { date: string; startTime: string; endTime: string }
+
+export function isExpired(expiry: Date | null, now: Date = new Date()): boolean {
+  if (!expiry) return true
+  return expiry.getTime() - now.getTime() <= SKEW_MS
+}
+
+function hhmm(ms: number, dayStartMs: number): string {
+  const mins = Math.round((ms - dayStartMs) / 60000)
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/**
+ * Map Google busy intervals to per-day block descriptors. Times are UTC wall-clock
+ * (consistent with how the rest of the app treats stored times). Multi-day intervals
+ * are split per calendar date; each piece is clamped to the window. A piece ending at
+ * the day boundary is rendered as "24:00".
+ */
+export function busyToBlocks(
+  busy: BusyInterval[],
+  windowStart: Date,
+  windowEnd: Date,
+): BlockDescriptor[] {
+  const blocks: BlockDescriptor[] = []
+  for (const b of busy) {
+    const startMs = Math.max(b.start.getTime(), windowStart.getTime())
+    const endMs = Math.min(b.end.getTime(), windowEnd.getTime())
+    if (endMs <= startMs) continue
+
+    let dayStartMs = Date.UTC(
+      new Date(startMs).getUTCFullYear(),
+      new Date(startMs).getUTCMonth(),
+      new Date(startMs).getUTCDate(),
+    )
+    while (dayStartMs < endMs) {
+      const nextDayMs = dayStartMs + DAY_MS
+      const pieceStart = Math.max(startMs, dayStartMs)
+      const pieceEnd = Math.min(endMs, nextDayMs)
+      if (pieceEnd > pieceStart) {
+        const date = new Date(dayStartMs).toISOString().slice(0, 10)
+        const startTime = hhmm(pieceStart, dayStartMs)
+        const endTime = pieceEnd === nextDayMs ? '24:00' : hhmm(pieceEnd, dayStartMs)
+        blocks.push({ date, startTime, endTime })
+      }
+      dayStartMs = nextDayMs
+    }
+  }
+  return blocks
+}
