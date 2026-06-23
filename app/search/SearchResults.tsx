@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { ProviderCard } from '@/components/provider/ProviderCard'
 import type { MapProvider } from '@/components/map/ProviderMap'
@@ -24,6 +25,7 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ providers, mapProviders }: SearchResultsProps) {
+  const router = useRouter()
   const [highlightedId, setHighlightedId] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined)
 
@@ -65,10 +67,7 @@ export function SearchResults({ providers, mapProviders }: SearchResultsProps) {
           center={userLocation}
           zoom={12}
           highlightedId={highlightedId}
-          onPinClick={(slug) => {
-            const el = document.getElementById(`card-${slug}`)
-            el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-          }}
+          onPinClick={(slug) => router.push(`/p/${slug}`)}
         />
       </div>
     </div>

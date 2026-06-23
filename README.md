@@ -7,7 +7,7 @@ A service provider scheduling platform built with Next.js 14. Customers find and
 - **Search & discovery** — find providers by profession, keyword, location, or available date
 - **Interactive map** — Leaflet/OpenStreetMap map on the home page and search results
 - **Provider profiles** — bio, profession badges, booking calendar, and past work carousel
-- **Booking flow** — instant confirmation or request-based, with email notifications via Resend
+- **Booking flow** — instant confirmation or request-based, with email notifications via Gmail SMTP (nodemailer)
 - **Provider dashboard** — week-view calendar, accept/decline bookings, block time slots
 - **Settings** — profession (multi-select), service radius, booking mode, visibility toggle
 
@@ -21,7 +21,7 @@ A service provider scheduling platform built with Next.js 14. Customers find and
 | Database | PostgreSQL (Neon) |
 | ORM | Prisma 7 + `@prisma/adapter-pg` |
 | Auth | NextAuth.js v4 (credentials) |
-| Email | Resend |
+| Email | nodemailer (Gmail SMTP) |
 | Maps | Leaflet + OpenStreetMap |
 | Testing | Jest + React Testing Library |
 
@@ -41,7 +41,7 @@ CompletedJob    — past work entries with image and description
 
 - Node.js 18+
 - A PostgreSQL database (Neon free tier works)
-- A Resend account for email (optional in development)
+- A Gmail account with an App Password for email (optional in development)
 
 ### 1. Install dependencies
 
@@ -57,7 +57,8 @@ Create `.env.local`:
 DATABASE_URL=postgresql://...
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-here
-RESEND_API_KEY=re_...          # optional, emails are skipped if missing
+GMAIL_USER=your-account@gmail.com   # optional, emails are skipped if unset
+GMAIL_APP_PASSWORD=...              # 16-char Google App Password (needs 2-Step Verification)
 ```
 
 ### 3. Push the schema
@@ -120,7 +121,7 @@ components/
 
 lib/
   availability.ts           # Slot status logic (available/booked/blocked/outside)
-  email.ts                  # Resend email helpers
+  email.ts                  # nodemailer/Gmail email helpers
   prisma.ts                 # Prisma client singleton
   validations.ts            # Zod schemas
 

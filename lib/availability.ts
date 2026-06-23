@@ -48,12 +48,13 @@ export function getAllSlots(
   return slots
 }
 
-// Keep backwards-compatible export for any other callers
 export function getAvailableSlots(
   availabilities: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>,
   bookings: Array<{ startTime: string; endTime: string; status: string }>,
   blockedSlots: Array<{ startTime: string; endTime: string }>,
   date: Date,
-): TimeSlot[] {
+): Array<{ startTime: string; endTime: string }> {
   return getAllSlots(availabilities, bookings, blockedSlots, date)
+    .filter((s) => s.status === 'available')
+    .map(({ startTime, endTime }) => ({ startTime, endTime }))
 }

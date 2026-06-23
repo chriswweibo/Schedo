@@ -110,7 +110,7 @@ export function ProviderMap({
             ? 'bg-indigo-600 border-white scale-125 text-white shadow-lg'
             : 'bg-white border-indigo-500 text-indigo-600 hover:scale-110',
         ].join(' ')
-        el.textContent = p.profession[0]
+        el.textContent = p.name[0]
 
         const icon = L.divIcon({
           html: el.outerHTML,
@@ -122,8 +122,9 @@ export function ProviderMap({
 
         const marker = L.marker([p.lat, p.lng], { icon })
           .addTo(mapRef.current!)
-          .bindPopup(
-            `<strong class="text-sm">${p.name}</strong><br/><span class="text-xs text-stone-500">${p.profession}</span>`
+          .bindTooltip(
+            `<a href="/p/${p.slug}" class="block text-sm font-semibold text-stone-900 hover:text-indigo-600 whitespace-nowrap">${p.name}<span class="block text-xs font-normal text-stone-400">${p.profession}</span></a>`,
+            { direction: 'top', offset: [0, -8], interactive: true, opacity: 1 }
           )
 
         marker.on('click', () => onPinClickRef.current?.(p.slug))

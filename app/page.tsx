@@ -98,7 +98,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-        <div className="hidden h-full min-h-[400px] lg:block">
+        <div className="hidden h-full min-h-[400px] lg:block isolate">
           <HomeMap />
         </div>
       </section>
