@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui/Input'
+import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
 import { GoogleButton } from '@/components/auth/GoogleButton'
@@ -83,14 +83,14 @@ export default function RegisterPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
+            <Field
               label="Full name"
               value={form.name}
               onChange={update('name')}
               required
               autoComplete="name"
             />
-            <Input
+            <Field
               label="Email"
               type="email"
               value={form.email}
@@ -98,7 +98,7 @@ export default function RegisterPage() {
               required
               autoComplete="email"
             />
-            <Input
+            <Field
               label="Password"
               type="password"
               value={form.password}

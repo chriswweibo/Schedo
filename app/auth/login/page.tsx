@@ -3,7 +3,7 @@ import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui/Input'
+import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
 import { GoogleButton } from '@/components/auth/GoogleButton'
@@ -67,7 +67,7 @@ function LoginForm() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
+            <Field
               label="Email"
               type="email"
               value={email}
@@ -75,7 +75,7 @@ function LoginForm() {
               required
               autoComplete="email"
             />
-            <Input
+            <Field
               label="Password"
               type="password"
               value={password}

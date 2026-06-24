@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { BookingRow } from '@/components/dashboard/BookingRow'
-import { Input } from '@/components/ui/Input'
+import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/Card'
 import { WorksCarousel } from '@/components/provider/WorksCarousel'
@@ -290,7 +290,7 @@ function ProfileTab({
               className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
             />
           </div>
-          <Input
+          <Field
             label="Keywords (comma-separated)"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
@@ -409,7 +409,7 @@ function PastWorkSection({
           <input type="file" accept="image/*" onChange={handleFile} className="sr-only" />
         </label>
 
-        <Input
+        <Field
           label="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -426,7 +426,7 @@ function PastWorkSection({
             className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
           />
         </div>
-        <Input
+        <Field
           label="Date completed"
           type="date"
           value={completedAt}
@@ -528,7 +528,7 @@ function LocationTab({
             Current location: {provider.lat.toFixed(4)}, {provider.lng.toFixed(4)}
           </p>
         )}
-        <Input
+        <Field
           label="Update address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}

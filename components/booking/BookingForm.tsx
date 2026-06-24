@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/Input'
+import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 
 interface BookingFormProps {
@@ -63,9 +63,9 @@ export function BookingForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input label="Your name" value={form.guestName} onChange={update('guestName')} required />
-      <Input label="Email" type="email" value={form.guestEmail} onChange={update('guestEmail')} required />
-      <Input label="Phone (optional)" type="tel" value={form.guestPhone} onChange={update('guestPhone')} />
+      <Field label="Your name" value={form.guestName} onChange={update('guestName')} required />
+      <Field label="Email" type="email" value={form.guestEmail} onChange={update('guestEmail')} required />
+      <Field label="Phone (optional)" type="tel" value={form.guestPhone} onChange={update('guestPhone')} />
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-stone-700">Notes (optional)</label>

@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Input } from '@/components/ui/Input'
+import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/Card'
 
@@ -78,14 +78,14 @@ export function SettingsForm({
           />
         </div>
 
-        <Input
+        <Field
           label="Keywords (comma-separated)"
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           placeholder="emergency electrician, EV charging, panel upgrade"
         />
 
-        <Input
+        <Field
           label="Address (updates your location)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
