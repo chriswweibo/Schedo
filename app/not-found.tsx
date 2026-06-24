@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export default function NotFound() {
   return (
@@ -14,10 +14,10 @@ export default function NotFound() {
         </p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link href="/">
-            <Button variant="primary">Back home</Button>
+            <Button variant="default">Back home</Button>
           </Link>
           <Link href="/search">
-            <Button variant="secondary">Find providers</Button>
+            <Button variant="outline">Find providers</Button>
           </Link>
         </div>
       </Card>

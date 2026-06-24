@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/Card'
 
 interface ProviderCardProps {
@@ -37,7 +37,7 @@ export function ProviderCard({ id, name, slug, profession, avatarUrl, distanceKm
         )}
       </div>
       <Link href={`/p/${slug}`}>
-        <Button variant="secondary" className="shrink-0">View</Button>
+        <Button variant="outline" className="shrink-0">View</Button>
       </Link>
     </Card>
   )

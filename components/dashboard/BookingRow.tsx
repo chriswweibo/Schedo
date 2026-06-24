@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { Badge, BadgeVariant } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface BookingRowProps {
   id: string
@@ -56,7 +56,7 @@ export function BookingRow({
       {status === 'PENDING' && (
         <div className="flex gap-2">
           <Button
-            variant="primary"
+            variant="default"
             onClick={() => handleAction('CONFIRMED')}
             disabled={loading !== null}
           >

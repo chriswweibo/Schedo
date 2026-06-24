@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export default function ConfirmationPage({
   searchParams,
@@ -25,7 +25,7 @@ export default function ConfirmationPage({
             : `Your request to ${provider} for ${date} at ${start} has been sent. We'll email you once they respond.`}
         </p>
         <Link href="/search">
-          <Button variant="secondary">Find more providers</Button>
+          <Button variant="outline">Find more providers</Button>
         </Link>
       </Card>
     </main>

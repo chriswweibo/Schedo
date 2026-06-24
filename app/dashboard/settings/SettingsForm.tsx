@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/Card'
 
 interface Provider {
@@ -152,7 +152,7 @@ export function SettingsForm({
           <div>
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               disabled={syncing}
               onClick={async () => {
                 setSyncing(true)
