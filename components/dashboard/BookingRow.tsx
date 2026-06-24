@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Badge, BadgeVariant } from '@/components/ui/Badge'
+import { Badge, BadgeVariant } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 interface BookingRowProps {
@@ -52,7 +52,7 @@ export function BookingRow({
           {format(new Date(date), 'MMMM d, yyyy')} · {startTime}–{endTime}
         </p>
       </div>
-      <Badge variant={status.toLowerCase() as BadgeVariant} />
+      <Badge variant={status.toLowerCase() as BadgeVariant}>{status.toLowerCase()}</Badge>
       {status === 'PENDING' && (
         <div className="flex gap-2">
           <Button
