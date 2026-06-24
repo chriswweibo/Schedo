@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export default function ConfirmationPage({
   searchParams,
@@ -19,13 +19,13 @@ export default function ConfirmationPage({
         <h1 className="mb-2 text-2xl font-bold">
           {isConfirmed ? 'Booking confirmed!' : 'Request sent!'}
         </h1>
-        <p className="mb-6 text-stone-500">
+        <p className="mb-6 text-muted-foreground">
           {isConfirmed
             ? `Your booking with ${provider} on ${date} at ${start} is confirmed. Check your email for details.`
             : `Your request to ${provider} for ${date} at ${start} has been sent. We'll email you once they respond.`}
         </p>
         <Link href="/search">
-          <Button variant="secondary">Find more providers</Button>
+          <Button variant="outline">Find more providers</Button>
         </Link>
       </Card>
     </main>

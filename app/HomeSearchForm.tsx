@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Field } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
 
 export function HomeSearchForm() {
   const router = useRouter()
@@ -19,7 +19,7 @@ export function HomeSearchForm() {
 
   return (
     <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <Input
+      <Field
         id="name"
         label="Provider name"
         placeholder="Search by provider name"
@@ -27,7 +27,7 @@ export function HomeSearchForm() {
         onChange={(e) => setName(e.target.value)}
         className="flex-1"
       />
-      <Input
+      <Field
         id="date"
         label="Date"
         type="date"

@@ -3,8 +3,8 @@ import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Field } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 
@@ -52,10 +52,10 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-8"><Logo variant="lockup" size={30} /></Link>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-1">Sign in</h1>
-          <p className="text-stone-500 text-sm mb-8">
+          <h1 className="text-2xl font-bold text-foreground mb-1">Sign in</h1>
+          <p className="text-muted-foreground text-sm mb-8">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-stone-900 font-medium hover:underline">
+            <Link href="/auth/register" className="text-foreground font-medium hover:underline">
               Register as a provider
             </Link>
           </p>
@@ -67,7 +67,7 @@ function LoginForm() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
+            <Field
               label="Email"
               type="email"
               value={email}
@@ -75,7 +75,7 @@ function LoginForm() {
               required
               autoComplete="email"
             />
-            <Input
+            <Field
               label="Password"
               type="password"
               value={password}

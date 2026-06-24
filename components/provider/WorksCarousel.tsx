@@ -36,7 +36,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
 
   if (jobs.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 text-stone-400 text-sm">
+      <div className="flex h-48 items-center justify-center rounded-2xl border-2 border-dashed border-border text-muted-foreground text-sm">
         No past work uploaded yet
       </div>
     )
@@ -49,7 +49,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active > 0 && (
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md text-stone-600 hover:text-stone-900 transition opacity-0 group-hover:opacity-100"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
             aria-label="Previous"
           >
             ‹
@@ -67,7 +67,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             <div
               key={job.id}
               onClick={() => setLightbox(job)}
-              className="w-full shrink-0 snap-start rounded-2xl border border-stone-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              className="w-full shrink-0 snap-start rounded-2xl border border-border bg-card overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
             >
               {job.imageUrl ? (
                 <div className="relative h-52 w-full overflow-hidden">
@@ -79,7 +79,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
                   </p>
                 </div>
               ) : (
-                <div className="flex h-52 items-center justify-center bg-stone-100 text-stone-300 text-5xl">
+                <div className="flex h-52 items-center justify-center bg-muted text-muted-foreground text-5xl">
                   🔧
                 </div>
               )}
@@ -88,9 +88,9 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
                   <p className="font-semibold text-sm leading-snug mb-1">{job.title}</p>
                 )}
                 {job.description && (
-                  <p className="text-xs text-stone-500 line-clamp-2">{job.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{job.description}</p>
                 )}
-                <p className="mt-1.5 text-xs text-stone-400">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   {format(new Date(job.completedAt), 'MMMM yyyy')}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active < jobs.length - 1 && (
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md text-stone-600 hover:text-stone-900 transition opacity-0 group-hover:opacity-100"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
             aria-label="Next"
           >
             ›
@@ -118,7 +118,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
               key={i}
               onClick={() => scrollTo(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === active ? 'w-5 bg-indigo-600' : 'w-1.5 bg-stone-300'
+                i === active ? 'w-5 bg-indigo-600' : 'w-1.5 bg-muted-foreground/40'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
@@ -133,19 +133,19 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
           onClick={() => setLightbox(null)}
         >
           <div
-            className="relative w-full max-w-2xl rounded-2xl bg-white overflow-hidden shadow-2xl"
+            className="relative w-full max-w-2xl rounded-2xl bg-card overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {lightbox.imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full max-h-[60vh] object-contain bg-stone-100" />
+              <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full max-h-[60vh] object-contain bg-muted" />
             )}
             <div className="p-5">
-              <p className="font-semibold text-slate-900">{lightbox.title}</p>
+              <p className="font-semibold text-foreground">{lightbox.title}</p>
               {lightbox.description && (
-                <p className="mt-1.5 text-sm text-stone-600">{lightbox.description}</p>
+                <p className="mt-1.5 text-sm text-muted-foreground">{lightbox.description}</p>
               )}
-              <p className="mt-2 text-xs text-stone-400">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {format(new Date(lightbox.completedAt), 'MMMM yyyy')}
               </p>
             </div>

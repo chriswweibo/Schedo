@@ -101,14 +101,14 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
         <button
           onClick={() => { setMonth(subMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }}
           disabled={isCurrentMonth}
-          className="p-0.5 text-stone-500 hover:text-stone-900 disabled:opacity-30 disabled:cursor-default"
+          className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-default"
         >←</button>
         <span className="text-sm font-semibold">{format(month, 'MMMM yyyy')}</span>
-        <button onClick={() => { setMonth(addMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }} className="p-0.5 text-stone-500 hover:text-stone-900">→</button>
+        <button onClick={() => { setMonth(addMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }} className="p-0.5 text-muted-foreground hover:text-foreground">→</button>
       </div>
 
       {/* Day labels */}
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-stone-400 mb-0.5">
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-muted-foreground mb-0.5">
         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -133,8 +133,8 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
               className={`rounded py-1 text-xs transition
                 ${isSelected ? 'bg-primary text-white' : ''}
                 ${isClickable && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-white' : ''}
-                ${isFullyBooked ? 'bg-stone-200 text-stone-400 cursor-default' : ''}
-                ${!isAvail || isPast ? 'text-stone-300 cursor-default' : ''}
+                ${isFullyBooked ? 'bg-muted text-muted-foreground cursor-default' : ''}
+                ${!isAvail || isPast ? 'text-muted-foreground/50 cursor-default' : ''}
                 ${isToday(day) && !isSelected ? 'font-bold' : ''}
               `}
             >
@@ -148,21 +148,21 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
       {selectedDate && (
         <div className="mt-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-slate-700">
+            <p className="text-xs font-semibold text-foreground">
               {format(selectedDate, 'EEEE, MMMM d')}
             </p>
             {/* Legend */}
-            <div className="flex items-center gap-2 text-[10px] text-stone-400">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-blue-500" /> Available</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-amber-400" /> Booked</span>
-              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-stone-300" /> Unavailable</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-muted-foreground/30" /> Unavailable</span>
             </div>
           </div>
 
           {loadingSlots ? (
             <div className="grid grid-cols-4 gap-1.5">
               {Array.from({ length: 16 }).map((_, i) => (
-                <div key={i} className="h-8 rounded-lg bg-stone-100 animate-pulse" />
+                <div key={i} className="h-8 rounded-lg bg-muted animate-pulse" />
               ))}
             </div>
           ) : slotsError ? (
@@ -178,9 +178,9 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                   const inSelection = selectionSet.has(key)
 
                   let cls = 'h-8 rounded-lg text-[11px] font-medium transition-all '
-                  if (slot.status === 'outside')      cls += 'bg-stone-100 text-stone-300 cursor-default'
+                  if (slot.status === 'outside')      cls += 'bg-muted text-muted-foreground/50 cursor-default'
                   else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 cursor-default line-through'
-                  else if (slot.status === 'blocked') cls += 'bg-stone-200 text-stone-400 cursor-default'
+                  else if (slot.status === 'blocked') cls += 'bg-muted text-muted-foreground cursor-default'
                   else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
                   else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
                   else if (inPreview)                 cls += 'bg-indigo-400 text-white opacity-75'

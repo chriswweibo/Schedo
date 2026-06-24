@@ -61,10 +61,10 @@ export default function HomePage() {
       {/* Hero */}
       <section className="grid min-h-[70vh] grid-cols-1 gap-0 lg:grid-cols-2">
         <div className="flex flex-col justify-center px-8 py-16 lg:px-16">
-          <h1 className="mb-4 text-4xl font-bold leading-tight text-stone-900 lg:text-5xl">
+          <h1 className="mb-4 text-4xl font-bold leading-tight text-foreground lg:text-5xl">
             Book trusted local<br />service providers
           </h1>
-          <p className="mb-6 text-lg text-stone-500">
+          <p className="mb-6 text-lg text-muted-foreground">
             Electricians, plumbers, gardeners and more — no account needed.
           </p>
           <HomeSearchForm />
@@ -76,7 +76,7 @@ export default function HomePage() {
                 {/* Parent label */}
                 <div className="flex w-28 shrink-0 items-center gap-1.5 pt-1">
                   <span className="text-sm leading-none">{icon}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {group}
                   </span>
                 </div>
@@ -87,7 +87,7 @@ export default function HomePage() {
                     <Link
                       key={cat.keyword}
                       href={`/search?keyword=${encodeURIComponent(cat.keyword)}`}
-                      className="flex items-center gap-1 rounded-full border border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                      className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
                     >
                       <span className="leading-none">{cat.icon}</span>
                       {cat.label}

@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Badge, BadgeVariant } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { Badge, BadgeVariant } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface BookingRowProps {
   id: string
@@ -44,19 +44,19 @@ export function BookingRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-stone-200 bg-white p-4">
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex-1 min-w-0">
         <p className="font-semibold">{guestName}</p>
-        <p className="text-sm text-stone-500">{guestEmail}</p>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted-foreground">{guestEmail}</p>
+        <p className="text-sm text-muted-foreground">
           {format(new Date(date), 'MMMM d, yyyy')} · {startTime}–{endTime}
         </p>
       </div>
-      <Badge variant={status.toLowerCase() as BadgeVariant} />
+      <Badge variant={status.toLowerCase() as BadgeVariant}>{status.toLowerCase()}</Badge>
       {status === 'PENDING' && (
         <div className="flex gap-2">
           <Button
-            variant="primary"
+            variant="default"
             onClick={() => handleAction('CONFIRMED')}
             disabled={loading !== null}
           >

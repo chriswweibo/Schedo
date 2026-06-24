@@ -1,8 +1,8 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Field } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
 
 interface SearchFiltersProps {
   initialValues: { keyword?: string; name?: string; date?: string }
@@ -25,19 +25,19 @@ export function SearchFilters({ initialValues }: SearchFiltersProps) {
 
   return (
     <form onSubmit={handleSearch} className="flex flex-wrap items-end gap-2">
-      <Input
+      <Field
         placeholder="Service type"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         className="w-48"
       />
-      <Input
+      <Field
         placeholder="Provider name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="w-40"
       />
-      <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40" />
+      <Field type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40" />
       <Button type="submit">Search</Button>
     </form>
   )

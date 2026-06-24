@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Field } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/Logo'
 import { GoogleButton } from '@/components/auth/GoogleButton'
 
@@ -74,23 +74,23 @@ export default function RegisterPage() {
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-8"><Logo variant="lockup" size={30} /></Link>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-1">Create your account</h1>
-          <p className="text-stone-500 text-sm mb-8">
+          <h1 className="text-2xl font-bold text-foreground mb-1">Create your account</h1>
+          <p className="text-muted-foreground text-sm mb-8">
             Already registered?{' '}
-            <Link href="/auth/login" className="text-stone-900 font-medium hover:underline">
+            <Link href="/auth/login" className="text-foreground font-medium hover:underline">
               Sign in
             </Link>
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
+            <Field
               label="Full name"
               value={form.name}
               onChange={update('name')}
               required
               autoComplete="name"
             />
-            <Input
+            <Field
               label="Email"
               type="email"
               value={form.email}
@@ -98,7 +98,7 @@ export default function RegisterPage() {
               required
               autoComplete="email"
             />
-            <Input
+            <Field
               label="Password"
               type="password"
               value={form.password}

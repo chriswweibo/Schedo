@@ -22,7 +22,7 @@ function JobCard({ job }: { job: Job }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative overflow-hidden rounded-2xl bg-stone-100 aspect-square text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="group relative overflow-hidden rounded-2xl bg-muted aspect-square text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
       >
         {job.imageUrl ? (
           <Image
@@ -56,7 +56,7 @@ function JobCard({ job }: { job: Job }) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative max-w-lg w-full bg-white rounded-2xl overflow-hidden shadow-2xl"
+            className="relative max-w-lg w-full bg-card rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {job.imageUrl ? (
@@ -67,10 +67,10 @@ function JobCard({ job }: { job: Job }) {
               <div className="flex h-48 items-center justify-center bg-indigo-50 text-5xl">🔧</div>
             )}
             <div className="p-5">
-              <p className="font-semibold text-slate-900">{job.title}</p>
-              <p className="text-xs text-stone-400 mt-0.5">{formatMonth(job.completedAt)}</p>
+              <p className="font-semibold text-foreground">{job.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{formatMonth(job.completedAt)}</p>
               {job.description && (
-                <p className="mt-3 text-sm text-stone-600 leading-relaxed">{job.description}</p>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{job.description}</p>
               )}
             </div>
             <button
@@ -89,11 +89,11 @@ function JobCard({ job }: { job: Job }) {
 export function PastWorkGallery({ jobs }: { jobs: Job[] }) {
   if (jobs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 py-16 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-background py-16 text-center">
         <span className="text-4xl opacity-30">🖼️</span>
         <div>
-          <p className="text-sm font-medium text-stone-500">No past work uploaded yet</p>
-          <p className="text-xs text-stone-400 mt-0.5">This provider hasn&apos;t added any portfolio items</p>
+          <p className="text-sm font-medium text-muted-foreground">No past work uploaded yet</p>
+          <p className="text-xs text-muted-foreground mt-0.5">This provider hasn&apos;t added any portfolio items</p>
         </div>
       </div>
     )

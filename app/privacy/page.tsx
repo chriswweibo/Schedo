@@ -10,18 +10,18 @@ const UPDATED = 'June 24, 2026'
 const CONTACT = 'schedo.it@gmail.com'
 
 function H({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-10 mb-3 text-xl font-semibold text-stone-900">{children}</h2>
+  return <h2 className="mt-10 mb-3 text-xl font-semibold text-foreground">{children}</h2>
 }
 function P({ children }: { children: React.ReactNode }) {
-  return <p className="mb-4 text-sm leading-relaxed text-stone-600">{children}</p>
+  return <p className="mb-4 text-sm leading-relaxed text-muted-foreground">{children}</p>
 }
 
 export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <Link href="/" className="text-sm font-medium text-primary hover:underline">← Back to Schedo</Link>
-      <h1 className="mt-4 mb-2 text-3xl font-bold text-stone-900">Privacy Policy</h1>
-      <p className="mb-8 text-sm text-stone-400">Last updated: {UPDATED}</p>
+      <h1 className="mt-4 mb-2 text-3xl font-bold text-foreground">Privacy Policy</h1>
+      <p className="mb-8 text-sm text-muted-foreground">Last updated: {UPDATED}</p>
 
       <P>
         Schedo (&ldquo;Schedo&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) operates a scheduling marketplace that connects
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
       </P>
       <P>
         <strong>Google Calendar data.</strong> If a provider connects Google Calendar, we request read-only access
-        (<code className="rounded bg-stone-100 px-1 py-0.5 text-xs">calendar.readonly</code>) and read only the
+        (<code className="rounded bg-muted px-1 py-0.5 text-xs">calendar.readonly</code>) and read only the
         <em> free/busy time ranges</em> of their primary calendar. We do not read event titles, descriptions,
         attendees, locations, or any other event details. OAuth tokens are encrypted at rest.
       </P>
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
         <a href={`mailto:${CONTACT}`} className="text-primary hover:underline">{CONTACT}</a>.
       </P>
 
-      <p className="mt-10 border-t border-stone-200 pt-6 text-sm text-stone-500">
+      <p className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
         See also our <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>.
       </p>
     </main>

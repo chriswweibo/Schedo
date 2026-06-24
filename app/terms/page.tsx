@@ -10,18 +10,18 @@ const UPDATED = 'June 24, 2026'
 const CONTACT = 'schedo.it@gmail.com'
 
 function H({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-10 mb-3 text-xl font-semibold text-stone-900">{children}</h2>
+  return <h2 className="mt-10 mb-3 text-xl font-semibold text-foreground">{children}</h2>
 }
 function P({ children }: { children: React.ReactNode }) {
-  return <p className="mb-4 text-sm leading-relaxed text-stone-600">{children}</p>
+  return <p className="mb-4 text-sm leading-relaxed text-muted-foreground">{children}</p>
 }
 
 export default function TermsPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <Link href="/" className="text-sm font-medium text-primary hover:underline">← Back to Schedo</Link>
-      <h1 className="mt-4 mb-2 text-3xl font-bold text-stone-900">Terms of Service</h1>
-      <p className="mb-8 text-sm text-stone-400">Last updated: {UPDATED}</p>
+      <h1 className="mt-4 mb-2 text-3xl font-bold text-foreground">Terms of Service</h1>
+      <p className="mb-8 text-sm text-muted-foreground">Last updated: {UPDATED}</p>
 
       <P>
         These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of Schedo (the
@@ -98,7 +98,7 @@ export default function TermsPage() {
         <a href={`mailto:${CONTACT}`} className="text-primary hover:underline">{CONTACT}</a>.
       </P>
 
-      <p className="mt-10 border-t border-stone-200 pt-6 text-sm text-stone-500">
+      <p className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
         See also our <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
       </p>
     </main>

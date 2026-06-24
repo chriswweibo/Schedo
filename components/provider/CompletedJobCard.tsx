@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 import { format } from 'date-fns'
 
 interface CompletedJobCardProps {
@@ -19,8 +19,8 @@ export function CompletedJobCard({ title, description, imageUrl, completedAt }: 
       )}
       <div className="p-4">
         <p className="font-semibold">{title}</p>
-        {description && <p className="mt-1 text-sm text-stone-500">{description}</p>}
-        <p className="mt-2 text-xs text-stone-400">
+        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        <p className="mt-2 text-xs text-muted-foreground">
           {format(new Date(completedAt), 'MMMM yyyy')}
         </p>
       </div>
