@@ -68,12 +68,12 @@ export function BookingForm({
       <Field label="Phone (optional)" type="tel" value={form.guestPhone} onChange={update('guestPhone')} />
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-stone-700">Notes (optional)</label>
+        <label className="text-sm font-medium text-foreground">Notes (optional)</label>
         <textarea
           value={form.notes}
           onChange={update('notes')}
           rows={3}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder="Anything the provider should know?"
         />
       </div>
