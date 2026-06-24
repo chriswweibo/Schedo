@@ -287,7 +287,7 @@ function ProfileTab({
               onChange={(e) => setBio(e.target.value)}
               rows={4}
               placeholder="Tell customers about your experience and services…"
-              className="rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
             />
           </div>
           <Field
@@ -423,7 +423,7 @@ function PastWorkSection({
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder="Brief description of the job…"
-            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
           />
         </div>
         <Field
@@ -553,7 +553,7 @@ function LocationTab({
           <select
             value={bookingMode}
             onChange={(e) => setBookingMode(e.target.value)}
-            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-foreground focus:outline-none"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-foreground focus:outline-none"
           >
             <option value="INSTANT">Instant — confirm immediately</option>
             <option value="REQUEST">Request — you approve each booking</option>

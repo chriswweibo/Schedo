@@ -74,7 +74,7 @@ export function SettingsForm({
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
-            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -111,7 +111,7 @@ export function SettingsForm({
             id="bookingMode"
             value={bookingMode}
             onChange={(e) => setBookingMode(e.target.value)}
-            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
           >
             <option value="INSTANT">Instant — confirm immediately</option>
             <option value="REQUEST">Request — you approve each booking</option>
