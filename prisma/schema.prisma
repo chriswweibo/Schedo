@@ -11,7 +11,7 @@ model Provider {
   name             String
   slug             String         @unique
   email            String         @unique
-  passwordHash     String
+  passwordHash     String?
   bio              String?
   avatarUrl        String?
   profession       String
@@ -22,6 +22,12 @@ model Provider {
   bookingMode      BookingMode    @default(INSTANT)
   isVisible        Boolean        @default(true)
   createdAt        DateTime       @default(now())
+
+  googleId            String?   @unique
+  googleAccessToken   String?
+  googleRefreshToken  String?
+  googleTokenExpiry   DateTime?
+  googleSyncedAt      DateTime?
 
   availability  Availability[]
   bookings      Booking[]

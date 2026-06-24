@@ -1,6 +1,5 @@
 'use client'
 import { useRef, useState } from 'react'
-import Image from 'next/image'
 import { format } from 'date-fns'
 
 interface Job {
@@ -71,8 +70,9 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
               className="w-full shrink-0 snap-start rounded-2xl border border-stone-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
             >
               {job.imageUrl ? (
-                <div className="relative h-52 w-full">
-                  <Image src={job.imageUrl} alt={job.title} fill className="object-cover" />
+                <div className="relative h-52 w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={job.imageUrl} alt={job.title} className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <p className="absolute bottom-3 left-3 right-3 text-white text-sm font-semibold leading-snug drop-shadow">
                     {job.title}
@@ -137,9 +137,8 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             {lightbox.imageUrl && (
-              <div className="relative aspect-video w-full">
-                <Image src={lightbox.imageUrl} alt={lightbox.title} fill className="object-cover" />
-              </div>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full max-h-[60vh] object-contain bg-stone-100" />
             )}
             <div className="p-5">
               <p className="font-semibold text-slate-900">{lightbox.title}</p>

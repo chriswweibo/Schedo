@@ -93,7 +93,7 @@ export function PastWorkGallery({ jobs }: { jobs: Job[] }) {
         <span className="text-4xl opacity-30">🖼️</span>
         <div>
           <p className="text-sm font-medium text-stone-500">No past work uploaded yet</p>
-          <p className="text-xs text-stone-400 mt-0.5">This provider hasn't added any portfolio items</p>
+          <p className="text-xs text-stone-400 mt-0.5">This provider hasn&apos;t added any portfolio items</p>
         </div>
       </div>
     )

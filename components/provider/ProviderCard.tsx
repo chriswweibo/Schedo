@@ -30,7 +30,7 @@ export function ProviderCard({ id, name, slug, profession, avatarUrl, distanceKm
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold truncate">{name}</p>
+        <Link href={`/p/${slug}`} className="font-semibold truncate hover:underline">{name}</Link>
         <p className="text-sm text-stone-500">{profession}</p>
         {distanceKm !== null && (
           <p className="text-xs text-stone-400">{distanceKm.toFixed(1)} km away</p>

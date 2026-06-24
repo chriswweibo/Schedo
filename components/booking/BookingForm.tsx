@@ -18,7 +18,7 @@ export function BookingForm({
 }: BookingFormProps) {
   const router = useRouter()
   const [form, setForm] = useState({ guestName: '', guestEmail: '', guestPhone: '', notes: '' })
-  const [bookingType, setBookingType] = useState<'INSTANT' | 'REQUEST'>('INSTANT')
+  const bookingType = bookingMode === 'REQUEST' ? 'REQUEST' : 'INSTANT'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -78,34 +78,17 @@ export function BookingForm({
         />
       </div>
 
-      {bookingMode === 'BOTH' && (
-        <div className="flex gap-3">
-          {(['INSTANT', 'REQUEST'] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setBookingType(t)}
-              className={`flex-1 rounded-lg border py-2 text-sm font-medium transition ${
-                bookingType === t
-                  ? 'border-primary bg-primary text-white'
-                  : 'border-stone-300 text-stone-700 hover:border-primary'
-              }`}
-            >
-              {t === 'INSTANT' ? 'Book instantly' : 'Send request'}
-            </button>
-          ))}
-        </div>
-      )}
-
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <Button type="submit" disabled={loading}>
-        {loading
-          ? 'Processing…'
-          : bookingMode === 'REQUEST' || bookingType === 'REQUEST'
-            ? 'Send request'
-            : 'Confirm booking'}
-      </Button>
+      {error === 'This time slot is no longer available' ? (
+        <Button type="button" onClick={() => router.back()}>
+          Go back
+        </Button>
+      ) : (
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Processing…' : 'Confirm booking'}
+        </Button>
+      )}
     </form>
   )
 }

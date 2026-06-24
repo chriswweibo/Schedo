@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { MapProvider } from '@/components/map/ProviderMap'
 
@@ -9,6 +10,7 @@ const ProviderMap = dynamic(
 )
 
 export function HomeMap() {
+  const router = useRouter()
   const [center, setCenter] = useState<[number, number] | null>(null)
   const [providers, setProviders] = useState<MapProvider[]>([])
 
@@ -57,5 +59,12 @@ export function HomeMap() {
     )
   }
 
-  return <ProviderMap providers={providers} center={center} zoom={12} />
+  return (
+    <ProviderMap
+      providers={providers}
+      center={center}
+      zoom={12}
+      onPinClick={(slug) => router.push(`/p/${slug}`)}
+    />
+  )
 }

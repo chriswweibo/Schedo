@@ -31,7 +31,9 @@ describe('GET /api/availability/[providerId]', () => {
     const res = await GET(req, { params: { providerId: 'p1' } })
     expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data).toHaveLength(2) // 09:00-10:00, 10:00-11:00
+    expect(data).toHaveLength(16) // full 06:00-22:00 range with statuses
+    const available = data.filter((s: { status: string }) => s.status === 'available')
+    expect(available).toHaveLength(2) // 09:00-10:00, 10:00-11:00
   })
 
   it('returns 400 for missing date', async () => {

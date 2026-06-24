@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
@@ -15,6 +17,7 @@ export default async function DashboardPage() {
         id: true, name: true, slug: true, bio: true, profession: true,
         keywords: true, lat: true, lng: true,
         acceptedRadiusKm: true, bookingMode: true, isVisible: true,
+        googleId: true,
         availability: { orderBy: { dayOfWeek: 'asc' } },
       },
     }),
@@ -33,18 +36,15 @@ export default async function DashboardPage() {
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
 
-  const pending = bookings.filter((b) => b.status === 'PENDING')
-  const upcoming = bookings.filter(
-    (b) => b.status === 'CONFIRMED' && new Date(b.date) >= startOfToday
-  )
+  const upcoming = bookings.filter((b) => new Date(b.date) >= startOfToday)
 
   return (
     <DashboardClient
       provider={provider}
-      pending={pending}
       upcoming={upcoming}
       jobs={jobs}
       slug={session.user.slug}
+      googleConnected={!!provider.googleId}
     />
   )
 }
