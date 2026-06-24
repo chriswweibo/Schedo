@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 import { format } from 'date-fns'
 
 interface CompletedJobCardProps {

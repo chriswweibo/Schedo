@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 
 interface Provider {
   slug: string; bio?: string | null; keywords: string[];

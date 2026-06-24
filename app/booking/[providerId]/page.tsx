@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 import { BookingForm } from '@/components/booking/BookingForm'
 import { prisma } from '@/lib/prisma'
 

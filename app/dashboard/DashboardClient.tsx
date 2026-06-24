@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { BookingRow } from '@/components/dashboard/BookingRow'
 import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 import { WorksCarousel } from '@/components/provider/WorksCarousel'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

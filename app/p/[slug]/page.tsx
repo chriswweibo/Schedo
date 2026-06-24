@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { ProviderCalendar } from '@/components/provider/ProviderCalendar'
-import { Card } from '@/components/ui/Card'
+import { Card } from '@/components/ui/card'
 import { prisma } from '@/lib/prisma'
 
 const WorksCarousel = dynamic(
