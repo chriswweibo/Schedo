@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -13,6 +14,7 @@ export function Navbar() {
       </Link>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         {session ? (
           <>
             <Link
