@@ -68,13 +68,13 @@ export function SettingsForm({
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
-          <label htmlFor="bio" className="text-sm font-medium text-stone-700">Bio</label>
+          <label htmlFor="bio" className="text-sm font-medium text-foreground">Bio</label>
           <textarea
             id="bio"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -93,7 +93,7 @@ export function SettingsForm({
         />
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="radius" className="text-sm font-medium text-stone-700">
+          <label htmlFor="radius" className="text-sm font-medium text-foreground">
             Accepted radius: {radius} km
           </label>
           <input
@@ -106,12 +106,12 @@ export function SettingsForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="bookingMode" className="text-sm font-medium text-stone-700">Booking mode</label>
+          <label htmlFor="bookingMode" className="text-sm font-medium text-foreground">Booking mode</label>
           <select
             id="bookingMode"
             value={bookingMode}
             onChange={(e) => setBookingMode(e.target.value)}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            className="rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
           >
             <option value="INSTANT">Instant — confirm immediately</option>
             <option value="REQUEST">Request — you approve each booking</option>
@@ -127,7 +127,7 @@ export function SettingsForm({
             onChange={(e) => setIsVisible(e.target.checked)}
             className="accent-primary h-4 w-4"
           />
-          <label htmlFor="visible" className="text-sm font-medium text-stone-700">
+          <label htmlFor="visible" className="text-sm font-medium text-foreground">
             Visible in search results
           </label>
         </div>
@@ -141,9 +141,9 @@ export function SettingsForm({
       </form>
 
       {googleConnected && (
-        <section className="flex flex-col gap-2 border-t border-stone-200 pt-6 mt-2">
+        <section className="flex flex-col gap-2 border-t border-border pt-6 mt-2">
           <h2 className="text-lg font-semibold">Google Calendar</h2>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-muted-foreground">
             {syncMessage ??
               (googleSyncedAt
                 ? `Last synced ${new Date(googleSyncedAt).toLocaleString()}`

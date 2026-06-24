@@ -74,10 +74,10 @@ export default function RegisterPage() {
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-8"><Logo variant="lockup" size={30} /></Link>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-1">Create your account</h1>
-          <p className="text-stone-500 text-sm mb-8">
+          <h1 className="text-2xl font-bold text-foreground mb-1">Create your account</h1>
+          <p className="text-muted-foreground text-sm mb-8">
             Already registered?{' '}
-            <Link href="/auth/login" className="text-stone-900 font-medium hover:underline">
+            <Link href="/auth/login" className="text-foreground font-medium hover:underline">
               Sign in
             </Link>
           </p>

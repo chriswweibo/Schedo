@@ -52,10 +52,10 @@ function LoginForm() {
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-8"><Logo variant="lockup" size={30} /></Link>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-1">Sign in</h1>
-          <p className="text-stone-500 text-sm mb-8">
+          <h1 className="text-2xl font-bold text-foreground mb-1">Sign in</h1>
+          <p className="text-muted-foreground text-sm mb-8">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-stone-900 font-medium hover:underline">
+            <Link href="/auth/register" className="text-foreground font-medium hover:underline">
               Register as a provider
             </Link>
           </p>

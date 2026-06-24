@@ -100,7 +100,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="flex h-screen flex-col">
-      <div className="sticky top-0 z-10 border-b border-stone-200 bg-white px-6 py-3">
+      <div className="sticky top-0 z-10 border-b border-border bg-background px-6 py-3">
         <SearchFilters initialValues={searchParams} />
       </div>
       <SearchResults providers={providers} mapProviders={mapProviders} />

@@ -7,7 +7,7 @@ import type { MapProvider } from '@/components/map/ProviderMap'
 
 const ProviderMap = dynamic(
   () => import('@/components/map/ProviderMap').then((m) => m.ProviderMap),
-  { ssr: false, loading: () => <div className="h-full w-full bg-stone-200 animate-pulse rounded-xl" /> }
+  { ssr: false, loading: () => <div className="h-full w-full bg-muted animate-pulse rounded-xl" /> }
 )
 
 interface ProviderResult {
@@ -42,7 +42,7 @@ export function SearchResults({ providers, mapProviders }: SearchResultsProps) {
       {/* Provider list */}
       <div className="flex w-full flex-col gap-3 overflow-y-auto p-6 lg:w-[420px] lg:max-w-[420px]">
         {providers.length === 0 ? (
-          <p className="text-stone-500">No providers found. Try adjusting your search.</p>
+          <p className="text-muted-foreground">No providers found. Try adjusting your search.</p>
         ) : (
           providers.map((p) => (
             <ProviderCard

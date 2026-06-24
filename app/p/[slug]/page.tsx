@@ -10,7 +10,7 @@ const WorksCarousel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-52 rounded-2xl bg-stone-100 animate-pulse" />
+      <div className="w-full h-52 rounded-2xl bg-muted animate-pulse" />
     ),
   }
 )
@@ -52,7 +52,7 @@ export default async function ProviderProfilePage({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold leading-tight text-slate-900">{provider.name}</h1>
+            <h1 className="text-2xl font-bold leading-tight text-foreground">{provider.name}</h1>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {professions.map((p) => (
                 <span key={p} className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
@@ -61,7 +61,7 @@ export default async function ProviderProfilePage({
               ))}
             </div>
             {provider.bio && (
-              <p className="mt-3 text-stone-600 text-sm leading-relaxed">{provider.bio}</p>
+              <p className="mt-3 text-muted-foreground text-sm leading-relaxed">{provider.bio}</p>
             )}
           </div>
         </div>
@@ -70,12 +70,12 @@ export default async function ProviderProfilePage({
       {/* ── Past work + Calendar ────────────────────────────── */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-slate-800">Past work</h2>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Past work</h2>
           <WorksCarousel jobs={provider.completedJobs} />
         </section>
 
         <section id="availability">
-          <h2 className="mb-4 text-lg font-semibold text-slate-800">Book a slot</h2>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Book a slot</h2>
           <Card className="p-4">
             <ProviderCalendar
               providerId={provider.id}

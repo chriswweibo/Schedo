@@ -24,7 +24,7 @@ export default async function BookingPage({
     return (
       <main className="mx-auto max-w-lg px-4 py-10">
         <h1 className="mb-2 text-2xl font-bold">Book {provider.name}</h1>
-        <p className="text-stone-500">
+        <p className="text-muted-foreground">
           Please select a date and time slot from{' '}
           <a href={`/p/${provider.slug ?? ''}`} className="text-primary underline">
             {provider.name}&apos;s profile
@@ -38,7 +38,7 @@ export default async function BookingPage({
   return (
     <main className="mx-auto max-w-lg px-4 py-10">
       <h1 className="mb-2 text-2xl font-bold">Book {provider.name}</h1>
-      <p className="mb-6 text-stone-500">
+      <p className="mb-6 text-muted-foreground">
         {provider.profession} · {date} {startTime}–{endTime}
       </p>
       <Card className="p-6">

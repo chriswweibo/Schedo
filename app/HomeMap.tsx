@@ -6,7 +6,7 @@ import type { MapProvider } from '@/components/map/ProviderMap'
 
 const ProviderMap = dynamic(
   () => import('@/components/map/ProviderMap').then((m) => m.ProviderMap),
-  { ssr: false, loading: () => <div className="h-full w-full rounded-xl bg-stone-100 animate-pulse" /> }
+  { ssr: false, loading: () => <div className="h-full w-full rounded-xl bg-muted animate-pulse" /> }
 )
 
 export function HomeMap() {
@@ -53,7 +53,7 @@ export function HomeMap() {
 
   if (!center) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-xl bg-stone-100 text-sm text-stone-400">
+      <div className="flex h-full w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
         Allow location access to see providers near you
       </div>
     )

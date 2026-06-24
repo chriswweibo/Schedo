@@ -19,7 +19,7 @@ export default function ConfirmationPage({
         <h1 className="mb-2 text-2xl font-bold">
           {isConfirmed ? 'Booking confirmed!' : 'Request sent!'}
         </h1>
-        <p className="mb-6 text-stone-500">
+        <p className="mb-6 text-muted-foreground">
           {isConfirmed
             ? `Your booking with ${provider} on ${date} at ${start} is confirmed. Check your email for details.`
             : `Your request to ${provider} for ${date} at ${start} has been sent. We'll email you once they respond.`}

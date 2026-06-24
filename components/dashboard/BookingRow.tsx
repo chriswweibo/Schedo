@@ -44,11 +44,11 @@ export function BookingRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-stone-200 bg-white p-4">
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex-1 min-w-0">
         <p className="font-semibold">{guestName}</p>
-        <p className="text-sm text-stone-500">{guestEmail}</p>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted-foreground">{guestEmail}</p>
+        <p className="text-sm text-muted-foreground">
           {format(new Date(date), 'MMMM d, yyyy')} · {startTime}–{endTime}
         </p>
       </div>
