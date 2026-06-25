@@ -1,11 +1,19 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) return null
-  return new Resend(process.env.RESEND_API_KEY)
+// Transactional email via Gmail SMTP (nodemailer). Requires GMAIL_USER +
+// GMAIL_APP_PASSWORD (a 16-char Google App Password). If either is unset,
+// email sending is a silent no-op (so local/dev without creds doesn't error).
+function getTransport() {
+  const user = process.env.GMAIL_USER
+  const pass = process.env.GMAIL_APP_PASSWORD
+  if (!user || !pass) return null
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  })
 }
 
-const FROM = process.env.RESEND_FROM ?? 'Schedo <noreply@schedo.app>'
+const FROM = process.env.GMAIL_USER ? `Schedo <${process.env.GMAIL_USER}>` : 'Schedo'
 
 interface BookingEmailParams {
   guestEmail: string
@@ -19,10 +27,10 @@ interface BookingEmailParams {
 }
 
 export async function sendInstantConfirmation(p: BookingEmailParams) {
-  const resend = getResend()
-  if (!resend) return
+  const tx = getTransport()
+  if (!tx) return
   await Promise.all([
-    resend.emails.send({
+    tx.sendMail({
       from: FROM,
       to: p.guestEmail,
       subject: `Booking confirmed with ${p.providerName}`,
@@ -31,23 +39,24 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
 <p>— Schedo</p>`,
     }),
-    p.providerEmail &&
-      resend.emails.send({
-        from: FROM,
-        to: p.providerEmail,
-        subject: `New booking from ${p.guestName}`,
-        html: `<p>You have a new confirmed booking from <strong>${p.guestName}</strong>.</p>
+    p.providerEmail
+      ? tx.sendMail({
+          from: FROM,
+          to: p.providerEmail,
+          subject: `New booking from ${p.guestName}`,
+          html: `<p>You have a new confirmed booking from <strong>${p.guestName}</strong>.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
 <p>View it in your <a href="${process.env.NEXTAUTH_URL}/dashboard">dashboard</a>.</p>`,
-      }),
+        })
+      : Promise.resolve(),
   ])
 }
 
 export async function sendRequestSubmitted(p: BookingEmailParams) {
-  const resend = getResend()
-  if (!resend) return
+  const tx = getTransport()
+  if (!tx) return
   await Promise.all([
-    resend.emails.send({
+    tx.sendMail({
       from: FROM,
       to: p.guestEmail,
       subject: `Booking request sent to ${p.providerName}`,
@@ -56,22 +65,23 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
 <p>We'll let you know once they confirm. — Schedo</p>`,
     }),
-    p.providerEmail &&
-      resend.emails.send({
-        from: FROM,
-        to: p.providerEmail,
-        subject: `New booking request from ${p.guestName}`,
-        html: `<p>You have a new booking request from <strong>${p.guestName}</strong>.</p>
+    p.providerEmail
+      ? tx.sendMail({
+          from: FROM,
+          to: p.providerEmail,
+          subject: `New booking request from ${p.guestName}`,
+          html: `<p>You have a new booking request from <strong>${p.guestName}</strong>.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
 <p><a href="${process.env.NEXTAUTH_URL}/dashboard">Accept or decline in your dashboard</a>.</p>`,
-      }),
+        })
+      : Promise.resolve(),
   ])
 }
 
 export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerEmail'>) {
-  const resend = getResend()
-  if (!resend) return
-  await resend.emails.send({
+  const tx = getTransport()
+  if (!tx) return
+  await tx.sendMail({
     from: FROM,
     to: p.guestEmail,
     subject: `Booking confirmed — ${p.providerName} accepted your request`,
@@ -88,9 +98,9 @@ export async function sendRequestDeclined(p: {
   providerName: string
   date: string
 }) {
-  const resend = getResend()
-  if (!resend) return
-  await resend.emails.send({
+  const tx = getTransport()
+  if (!tx) return
+  await tx.sendMail({
     from: FROM,
     to: p.guestEmail,
     subject: `Booking request declined`,

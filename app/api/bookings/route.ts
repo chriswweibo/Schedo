@@ -3,6 +3,7 @@ import { parseISO, startOfDay, endOfDay, format } from 'date-fns'
 import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { CreateBookingSchema } from '@/lib/validations'
+import { waitUntil } from '@vercel/functions'
 import { sendInstantConfirmation, sendRequestSubmitted } from '@/lib/email'
 import { checkRateLimit, clientIp } from '@/lib/ratelimit'
 import { encrypt } from '@/lib/crypto'
@@ -80,11 +81,14 @@ export async function POST(req: NextRequest) {
       startTime, endTime, profession: provider.profession,
     }
 
-    if (isInstant) {
-      void sendInstantConfirmation(emailParams).catch((e) => console.error('[email] sendInstantConfirmation failed', e))
-    } else {
-      void sendRequestSubmitted(emailParams).catch((e) => console.error('[email] sendRequestSubmitted failed', e))
-    }
+    // Send after the response, but keep the function alive until it finishes
+    // (a bare fire-and-forget promise can be killed when the serverless
+    // function freezes on return). waitUntil extends the lifetime on Vercel.
+    const emailJob = (isInstant
+      ? sendInstantConfirmation(emailParams)
+      : sendRequestSubmitted(emailParams)
+    ).catch((e) => console.error('[email] booking confirmation failed', e))
+    waitUntil(emailJob)
 
     return NextResponse.json({ id, status, date: dateValue, startTime, endTime }, { status: 201 })
   } catch {

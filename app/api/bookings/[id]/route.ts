@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { format } from 'date-fns'
+import { waitUntil } from '@vercel/functions'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendRequestAccepted, sendRequestDeclined } from '@/lib/email'
@@ -34,22 +35,26 @@ export async function PATCH(
 
     const formattedDate = format(booking.date, 'MMMM d, yyyy')
     if (status === 'CONFIRMED') {
-      void sendRequestAccepted({
-        guestEmail: booking.guestEmail,
-        guestName: booking.guestName,
-        providerName: booking.provider.name,
-        date: formattedDate,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
-        profession: booking.provider.profession,
-      }).catch((e) => console.error('[email] sendRequestAccepted failed', e))
+      waitUntil(
+        sendRequestAccepted({
+          guestEmail: booking.guestEmail,
+          guestName: booking.guestName,
+          providerName: booking.provider.name,
+          date: formattedDate,
+          startTime: booking.startTime,
+          endTime: booking.endTime,
+          profession: booking.provider.profession,
+        }).catch((e) => console.error('[email] sendRequestAccepted failed', e))
+      )
     } else if (status === 'DECLINED') {
-      void sendRequestDeclined({
-        guestEmail: booking.guestEmail,
-        guestName: booking.guestName,
-        providerName: booking.provider.name,
-        date: formattedDate,
-      }).catch((e) => console.error('[email] sendRequestDeclined failed', e))
+      waitUntil(
+        sendRequestDeclined({
+          guestEmail: booking.guestEmail,
+          guestName: booking.guestName,
+          providerName: booking.provider.name,
+          date: formattedDate,
+        }).catch((e) => console.error('[email] sendRequestDeclined failed', e))
+      )
     }
 
     return NextResponse.json(updated)
