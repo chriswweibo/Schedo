@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
     const dayStart = startOfDay(date)
     const dayEnd = endOfDay(date)
 
-    const provider = await prisma.provider.findUnique({ where: { id: providerId } })
+    const provider = await prisma.provider.findUnique({
+      where: { id: providerId },
+      select: { id: true, name: true, email: true, bookingMode: true, profession: true },
+    })
     if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
 
     const isInstant =

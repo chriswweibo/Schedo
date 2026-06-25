@@ -16,7 +16,13 @@ export async function GET(
 
       const provider = await prisma.provider.findUnique({
         where: { id: params.providerId },
-        include: { availability: { where: { isActive: true } } },
+        select: {
+          id: true,
+          availability: {
+            where: { isActive: true },
+            select: { dayOfWeek: true, startTime: true, endTime: true, isActive: true },
+          },
+        },
       })
       if (!provider) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -50,7 +56,13 @@ export async function GET(
 
     const provider = await prisma.provider.findUnique({
       where: { id: params.providerId },
-      include: { availability: { where: { isActive: true } } },
+      select: {
+        id: true,
+        availability: {
+          where: { isActive: true },
+          select: { dayOfWeek: true, startTime: true, endTime: true, isActive: true },
+        },
+      },
     })
     if (!provider) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
