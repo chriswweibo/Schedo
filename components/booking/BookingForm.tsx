@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 
@@ -21,6 +22,7 @@ export function BookingForm({
   const bookingType = bookingMode === 'REQUEST' ? 'REQUEST' : 'INSTANT'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [conflict, setConflict] = useState(false)
 
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -42,17 +44,34 @@ export function BookingForm({
         router.push(
           `/booking/confirmation?status=${data.status}&provider=${encodeURIComponent(providerName)}&date=${date}&start=${startTime}&end=${endTime}`
         )
+        return
+      }
+
+      // Slot taken between selection and submit — surface it as a toast and
+      // let the customer pick another time (their inputs stay on screen).
+      if (res.status === 409) {
+        setConflict(true)
+        toast.error('That time slot was just taken', {
+          description: 'Someone grabbed it first — please pick another time.',
+        })
+        return
+      }
+      if (res.status === 429) {
+        toast.error('Too many attempts', {
+          description: 'Please wait a moment and try again.',
+        })
+        return
+      }
+
+      const data = await res.json().catch(() => ({}))
+      const err = data.error
+      if (err?.fieldErrors) {
+        const msgs = Object.values(err.fieldErrors as Record<string, string[]>).flat()
+        setError(msgs[0] ?? 'Booking failed. Please try again.')
+      } else if (typeof err === 'string') {
+        setError(err)
       } else {
-        const data = await res.json()
-        const err = data.error
-        if (typeof err === 'string') {
-          setError(err)
-        } else if (err?.fieldErrors) {
-          const msgs = Object.values(err.fieldErrors as Record<string, string[]>).flat()
-          setError(msgs[0] ?? 'Booking failed. Please try again.')
-        } else {
-          setError('Booking failed. Please try again.')
-        }
+        setError('Booking failed. Please try again.')
       }
     } catch {
       setError('Network error. Please check your connection and try again.')
@@ -78,11 +97,11 @@ export function BookingForm({
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {error === 'This time slot is no longer available' ? (
+      {conflict ? (
         <Button type="button" onClick={() => router.back()}>
-          Go back
+          Pick another time
         </Button>
       ) : (
         <Button type="submit" disabled={loading}>
