@@ -1,3 +1,5 @@
+export const revalidate = 300
+
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
