@@ -12,10 +12,10 @@ export const CreateBookingSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
-  guestName: z.string().min(1),
-  guestEmail: z.string().email(),
-  guestPhone: z.string().optional(),
-  notes: z.string().optional(),
+  guestName: z.string().min(1).max(200),
+  guestEmail: z.string().email().max(254),
+  guestPhone: z.string().max(40).optional(),
+  notes: z.string().max(2000).optional(),
   bookingType: z.enum(['INSTANT', 'REQUEST']).default('INSTANT'),
 })
 

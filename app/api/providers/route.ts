@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { RegisterProviderSchema } from '@/lib/validations'
 import { haversineKm } from '@/lib/geo'
+import { checkRateLimit, clientIp } from '@/lib/ratelimit'
 
 function generateSlug(name: string): string {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -40,6 +41,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const { ok } = await checkRateLimit('search:' + clientIp(req), 30, 60)
+  if (!ok) {
+    return NextResponse.json({ error: 'Too many requests, please try again shortly.' }, { status: 429 })
+  }
+
   try {
     const { searchParams } = req.nextUrl
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { CreateBookingSchema } from '@/lib/validations'
 import { timesOverlap } from '@/lib/availability'
 import { sendInstantConfirmation, sendRequestSubmitted } from '@/lib/email'
+import { checkRateLimit, clientIp } from '@/lib/ratelimit'
 
 // Minimal shape of the interactive transaction client we need inside the tx callback.
 type TxClient = {
@@ -18,6 +19,11 @@ type TxClient = {
 }
 
 export async function POST(req: NextRequest) {
+  const { ok } = await checkRateLimit('booking:' + clientIp(req), 5, 60)
+  if (!ok) {
+    return NextResponse.json({ error: 'Too many requests, please try again shortly.' }, { status: 429 })
+  }
+
   try {
     const body = await req.json()
     const parsed = CreateBookingSchema.safeParse(body)
