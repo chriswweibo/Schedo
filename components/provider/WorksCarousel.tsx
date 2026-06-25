@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { useRef, useState, useEffect } from 'react'
 import { format } from 'date-fns'
 
@@ -87,8 +88,13 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             >
               {job.imageUrl ? (
                 <div className="relative h-52 w-full overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={job.imageUrl} alt={job.title} className="h-full w-full object-cover" />
+                  <Image
+                    src={job.imageUrl}
+                    alt={job.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <p className="absolute bottom-3 left-3 right-3 text-white text-sm font-semibold leading-snug drop-shadow">
                     {job.title}
@@ -156,8 +162,15 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             {lightbox.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full max-h-[60vh] object-contain bg-muted" />
+              <div className="relative aspect-video w-full bg-muted">
+                <Image
+                  src={lightbox.imageUrl}
+                  alt={lightbox.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 672px"
+                />
+              </div>
             )}
             <div className="p-5">
               <p className="font-semibold text-foreground">{lightbox.title}</p>

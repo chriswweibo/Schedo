@@ -58,11 +58,16 @@ export function DashboardClient({
   const [provider, setProvider] = useState(initialProvider)
   const [jobs, setJobs] = useState<Job[]>(initialJobs)
 
+  type SyncStatus = 'idle' | 'syncing' | 'synced' | 'failed'
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   const didSync = useRef(false)
   useEffect(() => {
     if (!googleConnected || didSync.current) return
     didSync.current = true
-    fetch('/api/me/calendar/sync', { method: 'POST' }).catch(() => {})
+    setSyncStatus('syncing')
+    fetch('/api/me/calendar/sync', { method: 'POST' })
+      .then((r) => setSyncStatus(r.ok ? 'synced' : 'failed'))
+      .catch(() => setSyncStatus('failed'))
   }, [googleConnected])
 
   const pendingCount = upcoming.filter((b) => b.status === 'PENDING').length
@@ -122,6 +127,31 @@ export function DashboardClient({
         <h1 className="text-xl font-bold mb-6 text-foreground">
           {TABS.find((t) => t.id === tab)?.label}
         </h1>
+
+        {syncStatus !== 'idle' && (
+          <div className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm border ${
+            syncStatus === 'syncing'
+              ? 'bg-muted text-muted-foreground border-border'
+              : syncStatus === 'synced'
+              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900'
+              : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900'
+          }`}>
+            <span>
+              {syncStatus === 'syncing' && <span className="animate-pulse">Syncing calendar…</span>}
+              {syncStatus === 'synced' && 'Calendar synced'}
+              {syncStatus === 'failed' && 'Sync failed — will retry next visit'}
+            </span>
+            {syncStatus !== 'syncing' && (
+              <button
+                onClick={() => setSyncStatus('idle')}
+                className="shrink-0 opacity-60 hover:opacity-100 transition"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
 
         {tab === 'inbox' && (
           <InboxTab

@@ -68,7 +68,7 @@ export default async function ProviderProfilePage({
         <div className="flex items-start gap-5">
           <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-3xl font-bold text-indigo-400 dark:bg-indigo-950 dark:text-indigo-300 overflow-hidden">
             {provider.avatarUrl ? (
-              <Image src={provider.avatarUrl} alt={provider.name} fill className="object-cover" />
+              <Image src={provider.avatarUrl} alt={provider.name} fill sizes="80px" className="object-cover" />
             ) : (
               <span>{provider.name[0]}</span>
             )}
