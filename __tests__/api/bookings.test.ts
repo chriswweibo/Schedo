@@ -5,11 +5,26 @@ import { POST } from '@/app/api/bookings/route'
 import { PATCH } from '@/app/api/bookings/[id]/route'
 import { NextRequest } from 'next/server'
 
+// tx stub — shared references so tests can control return values
+const txBookingFindMany = jest.fn()
+const txBlockedSlotFindMany = jest.fn()
+const txBookingCreate = jest.fn()
+
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     provider: { findUnique: jest.fn() },
-    booking: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+    booking: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     blockedSlot: { findMany: jest.fn() },
+    // $transaction executes the callback with a tx stub
+    $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        booking: {
+          findMany: txBookingFindMany,
+          create: txBookingCreate,
+        },
+        blockedSlot: { findMany: txBlockedSlotFindMany },
+      })
+    ),
   },
 }))
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }))
@@ -34,15 +49,25 @@ const validBody = {
 }
 
 describe('POST /api/bookings', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    // Reset $transaction to default passthrough after clearAllMocks wipes it
+    ;(prisma.$transaction as jest.Mock).mockImplementation(
+      async (fn: (tx: unknown) => Promise<unknown>) =>
+        fn({
+          booking: { findMany: txBookingFindMany, create: txBookingCreate },
+          blockedSlot: { findMany: txBlockedSlotFindMany },
+        })
+    )
+  })
 
-  it('creates CONFIRMED booking for INSTANT mode', async () => {
+  it('creates CONFIRMED booking for INSTANT mode (non-overlapping)', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+    txBookingFindMany.mockResolvedValue([])
+    txBlockedSlotFindMany.mockResolvedValue([])
+    txBookingCreate.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -52,15 +77,16 @@ describe('POST /api/bookings', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.status).toBe('CONFIRMED')
+    expect(txBookingCreate).toHaveBeenCalledTimes(1)
   })
 
   it('creates PENDING booking for REQUEST mode', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'REQUEST', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'PENDING' })
+    txBookingFindMany.mockResolvedValue([])
+    txBlockedSlotFindMany.mockResolvedValue([])
+    txBookingCreate.mockResolvedValue({ id: 'b1', status: 'PENDING' })
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -70,16 +96,17 @@ describe('POST /api/bookings', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.status).toBe('PENDING')
+    expect(txBookingCreate).toHaveBeenCalledTimes(1)
   })
 
-  it('returns 409 on time overlap', async () => {
+  it('returns 409 and does NOT call create on time overlap (CONFIRMED booking)', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([
+    txBookingFindMany.mockResolvedValue([
       { startTime: '10:00', endTime: '11:00', status: 'CONFIRMED' },
     ])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    txBlockedSlotFindMany.mockResolvedValue([])
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -87,15 +114,33 @@ describe('POST /api/bookings', () => {
     })
     const res = await POST(req)
     expect(res.status).toBe(409)
+    expect(txBookingCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 on serialization failure (P2034)', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
+    })
+    const serializationErr = Object.assign(new Error('Transaction serialization failure'), { code: 'P2034' })
+    ;(prisma.$transaction as jest.Mock).mockRejectedValue(serializationErr)
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(409)
+    const data = await res.json()
+    expect(data.error).toBe('This time slot is no longer available')
   })
 
   it('creates CONFIRMED booking when BOTH mode + bookingType INSTANT', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'BOTH', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+    txBookingFindMany.mockResolvedValue([])
+    txBlockedSlotFindMany.mockResolvedValue([])
+    txBookingCreate.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
