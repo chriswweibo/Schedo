@@ -29,10 +29,10 @@ jest.mock('@/lib/prisma', () => ({
 }))
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }))
 jest.mock('@/lib/email', () => ({
-  sendInstantConfirmation: jest.fn(),
-  sendRequestSubmitted: jest.fn(),
-  sendRequestAccepted: jest.fn(),
-  sendRequestDeclined: jest.fn(),
+  sendInstantConfirmation: jest.fn().mockResolvedValue(undefined),
+  sendRequestSubmitted: jest.fn().mockResolvedValue(undefined),
+  sendRequestAccepted: jest.fn().mockResolvedValue(undefined),
+  sendRequestDeclined: jest.fn().mockResolvedValue(undefined),
 }))
 
 import { prisma } from '@/lib/prisma'

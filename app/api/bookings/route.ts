@@ -95,9 +95,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (isInstant) {
-      await sendInstantConfirmation(emailParams)
+      void sendInstantConfirmation(emailParams).catch((e) => console.error('[email] sendInstantConfirmation failed', e))
     } else {
-      await sendRequestSubmitted(emailParams)
+      void sendRequestSubmitted(emailParams).catch((e) => console.error('[email] sendRequestSubmitted failed', e))
     }
 
     return NextResponse.json(booking, { status: 201 })
