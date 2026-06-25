@@ -35,6 +35,7 @@ model Provider {
   completedJobs CompletedJob[]
 
   @@index([isVisible])
+  @@index([lat, lng])
 }
 
 model Availability {
@@ -86,6 +87,8 @@ model CompletedJob {
   description String?
   imageUrl    String?
   completedAt DateTime
+
+  @@index([providerId, completedAt])
 }
 
 enum BookingMode {
