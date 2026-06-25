@@ -22,7 +22,7 @@ Schedo is a scheduling platform for small business service providers (electricia
 | Maps | Mapbox GL |
 | Date utils | date-fns |
 | Validation | Zod |
-| Email | Resend |
+| Email | nodemailer (Gmail SMTP) |
 | Deployment | Vercel |
 
 **Design language:** Warm neutral — stone/warm-white backgrounds, green accents (`#16a34a`), minimal borders, soft shadows.
@@ -191,7 +191,7 @@ No customer account is created.
 
 ## Email Notifications
 
-Triggered server-side via Resend:
+Triggered server-side via nodemailer (Gmail SMTP):
 
 | Event | Recipient |
 |---|---|
