@@ -82,6 +82,7 @@ export function DashboardClient({
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? 'page' : undefined}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition text-left ${
               tab === t.id
                 ? 'bg-foreground text-background'
@@ -105,6 +106,7 @@ export function DashboardClient({
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? 'page' : undefined}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition ${
               tab === t.id ? 'text-foreground' : 'text-muted-foreground'
             }`}

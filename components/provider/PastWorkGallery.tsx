@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Job {
   id: string
@@ -16,6 +16,22 @@ function formatMonth(d: Date | string) {
 
 function JobCard({ job }: { job: Job }) {
   const [open, setOpen] = useState(false)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (open) {
+      closeButtonRef.current?.focus()
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
 
   return (
     <>
@@ -52,6 +68,9 @@ function JobCard({ job }: { job: Job }) {
       {/* Lightbox */}
       {open && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Job photo"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setOpen(false)}
         >
@@ -74,7 +93,9 @@ function JobCard({ job }: { job: Job }) {
               )}
             </div>
             <button
+              ref={closeButtonRef}
               onClick={() => setOpen(false)}
+              aria-label="Close"
               className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white text-sm hover:bg-black/60"
             >
               ✕

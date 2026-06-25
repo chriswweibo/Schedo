@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { format } from 'date-fns'
 
 interface Job {
@@ -14,6 +14,22 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState<Job | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (lightbox) {
+      closeButtonRef.current?.focus()
+    }
+  }, [lightbox])
+
+  useEffect(() => {
+    if (!lightbox) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [lightbox])
 
   function scrollTo(index: number) {
     const track = trackRef.current
@@ -49,7 +65,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active > 0 && (
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Previous"
           >
             ‹
@@ -102,7 +118,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active < jobs.length - 1 && (
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Next"
           >
             ›
@@ -129,6 +145,9 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
       {/* Lightbox */}
       {lightbox && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Job photo"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setLightbox(null)}
         >
@@ -150,6 +169,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
               </p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={() => setLightbox(null)}
               className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition text-sm"
               aria-label="Close"
