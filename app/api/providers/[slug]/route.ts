@@ -17,7 +17,11 @@ export async function GET(
         acceptedRadiusKm: true, bookingMode: true, isVisible: true,
         createdAt: true,
         availability: { where: { isActive: true } },
-        completedJobs: { orderBy: { completedAt: 'desc' } },
+        completedJobs: {
+          orderBy: { completedAt: 'desc' },
+          take: 24,
+          select: { id: true, title: true, description: true, imageUrl: true, completedAt: true },
+        },
       },
     })
 

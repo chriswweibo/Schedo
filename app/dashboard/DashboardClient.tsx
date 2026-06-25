@@ -58,11 +58,16 @@ export function DashboardClient({
   const [provider, setProvider] = useState(initialProvider)
   const [jobs, setJobs] = useState<Job[]>(initialJobs)
 
+  type SyncStatus = 'idle' | 'syncing' | 'synced' | 'failed'
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   const didSync = useRef(false)
   useEffect(() => {
     if (!googleConnected || didSync.current) return
     didSync.current = true
-    fetch('/api/me/calendar/sync', { method: 'POST' }).catch(() => {})
+    setSyncStatus('syncing')
+    fetch('/api/me/calendar/sync', { method: 'POST' })
+      .then((r) => setSyncStatus(r.ok ? 'synced' : 'failed'))
+      .catch(() => setSyncStatus('failed'))
   }, [googleConnected])
 
   const pendingCount = upcoming.filter((b) => b.status === 'PENDING').length
@@ -82,6 +87,7 @@ export function DashboardClient({
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? 'page' : undefined}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition text-left ${
               tab === t.id
                 ? 'bg-foreground text-background'
@@ -105,6 +111,7 @@ export function DashboardClient({
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? 'page' : undefined}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition ${
               tab === t.id ? 'text-foreground' : 'text-muted-foreground'
             }`}
@@ -120,6 +127,31 @@ export function DashboardClient({
         <h1 className="text-xl font-bold mb-6 text-foreground">
           {TABS.find((t) => t.id === tab)?.label}
         </h1>
+
+        {syncStatus !== 'idle' && (
+          <div className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm border ${
+            syncStatus === 'syncing'
+              ? 'bg-muted text-muted-foreground border-border'
+              : syncStatus === 'synced'
+              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900'
+              : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900'
+          }`}>
+            <span>
+              {syncStatus === 'syncing' && <span className="animate-pulse">Syncing calendar…</span>}
+              {syncStatus === 'synced' && 'Calendar synced'}
+              {syncStatus === 'failed' && 'Sync failed — will retry next visit'}
+            </span>
+            {syncStatus !== 'syncing' && (
+              <button
+                onClick={() => setSyncStatus('idle')}
+                className="shrink-0 opacity-60 hover:opacity-100 transition"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
 
         {tab === 'inbox' && (
           <InboxTab
@@ -463,7 +495,7 @@ function PastWorkSection({
                 <button
                   type="button"
                   onClick={() => handleDelete(job.id)}
-                  className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                  className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 transition opacity-0 group-hover:opacity-100"
                   title="Delete"
                 >
                   ✕
@@ -744,8 +776,8 @@ function CalendarTab({ availability }: { availability: Availability[] }) {
                   cellClass += 'bg-muted cursor-default'
                 } else if (status === 'available') {
                   cellClass += isToday
-                    ? 'bg-indigo-50/40 hover:bg-emerald-50 cursor-pointer group'
-                    : 'bg-card hover:bg-emerald-50 cursor-pointer group'
+                    ? 'bg-indigo-50/40 dark:bg-indigo-950/40 hover:bg-emerald-50 dark:hover:bg-emerald-950 cursor-pointer group'
+                    : 'bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950 cursor-pointer group'
                   inner = (
                     <span className="opacity-0 group-hover:opacity-100 text-[9px] font-semibold text-emerald-600 transition-opacity">
                       Block
@@ -797,7 +829,7 @@ function CalendarTab({ availability }: { availability: Availability[] }) {
       <div className="flex flex-wrap gap-2">
         {[
           { bg: 'bg-card ring-1 ring-border', label: 'Available' },
-          { bg: 'bg-emerald-50 ring-1 ring-emerald-200', label: 'Hover to block' },
+          { bg: 'bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-200 dark:ring-emerald-800', label: 'Hover to block' },
           { bg: 'bg-amber-400', label: 'Pending request' },
           { bg: 'bg-indigo-500', label: 'Confirmed' },
           { bg: 'bg-slate-700', label: 'Blocked' },

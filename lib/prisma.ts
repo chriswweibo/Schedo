@@ -9,7 +9,8 @@ const ENCRYPT_DECRYPT_OPS = [
 ]
 
 function createClient() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+  // Cap per-instance connections for serverless; use the Neon pooler URL (-pooler host) for DATABASE_URL.
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 })
   const adapter = new PrismaPg(pool)
   // Transparent at-rest encryption of Booking guest PII. NOTE: this hook is
   // scoped to the `booking` model, so it only fires for direct booking queries.

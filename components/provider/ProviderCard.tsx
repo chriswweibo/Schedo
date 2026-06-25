@@ -24,7 +24,7 @@ export function ProviderCard({ id, name, slug, profession, avatarUrl, distanceKm
     >
       <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-bold text-muted-foreground">
         {avatarUrl ? (
-          <Image src={avatarUrl} alt={name} fill className="rounded-full object-cover" />
+          <Image src={avatarUrl} alt={name} fill sizes="56px" className="rounded-full object-cover" />
         ) : (
           name[0]?.toUpperCase() ?? '?'
         )}

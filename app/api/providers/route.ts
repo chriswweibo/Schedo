@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { RegisterProviderSchema } from '@/lib/validations'
-import { haversineKm } from '@/lib/geo'
+import { checkRateLimit, clientIp } from '@/lib/ratelimit'
+import { searchProviders } from '@/lib/search'
 
 function generateSlug(name: string): string {
   const base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -40,93 +41,38 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const { ok } = await checkRateLimit('search:' + clientIp(req), 30, 60)
+  if (!ok) {
+    return NextResponse.json({ error: 'Too many requests, please try again shortly.' }, { status: 429 })
+  }
+
   try {
     const { searchParams } = req.nextUrl
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null
     const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null
-    const keyword = searchParams.get('keyword')?.toLowerCase() ?? ''
-    const name = searchParams.get('name')?.toLowerCase() ?? ''
-    const date = searchParams.get('date')
+    const keyword = searchParams.get('keyword') ?? ''
+    const name = searchParams.get('name') ?? ''
+    const date = searchParams.get('date') ?? ''
+    const page = searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1
 
-    const providers = await prisma.provider.findMany({
-      where: { isVisible: true },
-      include: { availability: { where: { isActive: true } } },
-      orderBy: [{ createdAt: 'desc' }],
-      take: 200,
+    const { providers, page: pg, pageSize, hasMore } = await searchProviders({
+      lat,
+      lng,
+      keyword,
+      name,
+      date,
+      page,
+      pageSize: 50,
     })
 
-    // Pre-compute distances once
-    const distanceMap = new Map<string, number>()
-    if (lat !== null && lng !== null) {
-      for (const p of providers) {
-        if (p.lat !== null && p.lng !== null) {
-          distanceMap.set(p.id, haversineKm(lat, lng, p.lat, p.lng))
-        }
-      }
-    }
-
-    let results = providers
-
-    // Geographic filter
-    if (lat !== null && lng !== null) {
-      results = results.filter((p) => {
-        const dist = distanceMap.get(p.id)
-        if (dist === undefined) return false
-        return dist <= p.acceptedRadiusKm
-      })
-    }
-
-    // Keyword filter (profession + tags)
-    if (keyword) {
-      results = results.filter(
-        (p) =>
-          p.profession.toLowerCase().includes(keyword) ||
-          p.keywords.some((k) => k.toLowerCase().includes(keyword))
-      )
-    }
-
-    // Name filter
-    if (name) {
-      results = results.filter((p) => p.name.toLowerCase().includes(name))
-    }
-
-    // Day-of-week filter — getUTCDay() because YYYY-MM-DD parses as UTC midnight
-    if (date) {
-      const dayOfWeek = new Date(date).getUTCDay()
-      results = results.filter((p) => {
-        if (p.availability.length === 0) return true
-        return p.availability.some((a) => a.dayOfWeek === dayOfWeek && a.isActive)
-      })
-    }
-
-    // Sort by distance asc, fallback to createdAt order (already from Prisma)
-    if (lat !== null && lng !== null) {
-      results.sort((a, b) => {
-        const dA = distanceMap.get(a.id) ?? Infinity
-        const dB = distanceMap.get(b.id) ?? Infinity
-        return dA - dB
-      })
-    }
-
-    const response = results.slice(0, 50).map((p) => {
-      const distanceKm = distanceMap.has(p.id)
-        ? Math.round(distanceMap.get(p.id)! * 10) / 10
-        : null
-      return {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        profession: p.profession,
-        avatarUrl: p.avatarUrl,
-        keywords: p.keywords,
-        lat: p.lat,
-        lng: p.lng,
-        createdAt: p.createdAt,
-        distanceKm,
-      }
+    // Return the providers array for backward compatibility; pagination fields are additive.
+    return NextResponse.json(providers, {
+      headers: {
+        'X-Page': String(pg),
+        'X-Page-Size': String(pageSize),
+        'X-Has-More': String(hasMore),
+      },
     })
-
-    return NextResponse.json(response)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

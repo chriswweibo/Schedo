@@ -8,20 +8,26 @@ import { NextRequest } from 'next/server'
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     provider: { findUnique: jest.fn() },
-    booking: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+    booking: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     blockedSlot: { findMany: jest.fn() },
+    $executeRaw: jest.fn(),
   },
 }))
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }))
 jest.mock('@/lib/email', () => ({
-  sendInstantConfirmation: jest.fn(),
-  sendRequestSubmitted: jest.fn(),
-  sendRequestAccepted: jest.fn(),
-  sendRequestDeclined: jest.fn(),
+  sendInstantConfirmation: jest.fn().mockResolvedValue(undefined),
+  sendRequestSubmitted: jest.fn().mockResolvedValue(undefined),
+  sendRequestAccepted: jest.fn().mockResolvedValue(undefined),
+  sendRequestDeclined: jest.fn().mockResolvedValue(undefined),
+}))
+jest.mock('@/lib/crypto', () => ({
+  encrypt: jest.fn((v: string | null) => (v == null ? null : `enc:${v}`)),
+  decrypt: jest.fn((v: string | null) => v),
 }))
 
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
+import { sendInstantConfirmation, sendRequestSubmitted } from '@/lib/email'
 
 const validBody = {
   providerId: 'p1',
@@ -34,15 +40,15 @@ const validBody = {
 }
 
 describe('POST /api/bookings', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
-  it('creates CONFIRMED booking for INSTANT mode', async () => {
+  it('creates CONFIRMED booking for INSTANT mode (non-overlapping)', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(1)
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -52,15 +58,16 @@ describe('POST /api/bookings', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.status).toBe('CONFIRMED')
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(sendInstantConfirmation).toHaveBeenCalledTimes(1)
+    expect(sendRequestSubmitted).not.toHaveBeenCalled()
   })
 
   it('creates PENDING booking for REQUEST mode', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'REQUEST', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'PENDING' })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(1)
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -70,16 +77,16 @@ describe('POST /api/bookings', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.status).toBe('PENDING')
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(sendRequestSubmitted).toHaveBeenCalledTimes(1)
+    expect(sendInstantConfirmation).not.toHaveBeenCalled()
   })
 
-  it('returns 409 on time overlap', async () => {
+  it('returns 409 and does NOT send email on time overlap ($executeRaw returns 0)', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([
-      { startTime: '10:00', endTime: '11:00', status: 'CONFIRMED' },
-    ])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(0)
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -87,15 +94,32 @@ describe('POST /api/bookings', () => {
     })
     const res = await POST(req)
     expect(res.status).toBe(409)
+    const data = await res.json()
+    expect(data.error).toBe('This time slot is no longer available')
+    expect(sendInstantConfirmation).not.toHaveBeenCalled()
+    expect(sendRequestSubmitted).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 on blocked slot overlap ($executeRaw returns 0)', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
+    })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(0)
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(409)
+    expect(sendInstantConfirmation).not.toHaveBeenCalled()
   })
 
   it('creates CONFIRMED booking when BOTH mode + bookingType INSTANT', async () => {
     ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
       id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'BOTH', email: 'bob@example.com',
     })
-    ;(prisma.booking.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.blockedSlot.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.booking.create as jest.Mock).mockResolvedValue({ id: 'b1', status: 'CONFIRMED' })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(1)
 
     const req = new NextRequest('http://localhost/api/bookings', {
       method: 'POST',
@@ -104,6 +128,68 @@ describe('POST /api/bookings', () => {
     const res = await POST(req)
     expect(res.status).toBe(201)
     const data = await res.json()
+    expect(data.status).toBe('CONFIRMED')
+    expect(sendInstantConfirmation).toHaveBeenCalledTimes(1)
+  })
+
+  it('encrypts PII fields before insert', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
+    })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(1)
+
+    const { encrypt } = jest.requireMock('@/lib/crypto') as { encrypt: jest.Mock }
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({ ...validBody, guestPhone: '555-1234', notes: 'please call ahead' }),
+    })
+    await POST(req)
+
+    // encrypt should have been called for all four PII fields
+    expect(encrypt).toHaveBeenCalledWith('Alice')
+    expect(encrypt).toHaveBeenCalledWith('alice@example.com')
+    expect(encrypt).toHaveBeenCalledWith('555-1234')
+    expect(encrypt).toHaveBeenCalledWith('please call ahead')
+  })
+
+  it('returns 404 when provider not found', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue(null)
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 400 on invalid body', async () => {
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({ providerId: 'p1' }), // missing required fields
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+  })
+
+  it('response does not include PII fields', async () => {
+    ;(prisma.provider.findUnique as jest.Mock).mockResolvedValue({
+      id: 'p1', name: 'Bob', profession: 'Plumber', bookingMode: 'INSTANT', email: 'bob@example.com',
+    })
+    ;(prisma.$executeRaw as unknown as jest.Mock).mockResolvedValue(1)
+
+    const req = new NextRequest('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    })
+    const res = await POST(req)
+    const data = await res.json()
+    expect(data.guestName).toBeUndefined()
+    expect(data.guestEmail).toBeUndefined()
+    expect(data.guestPhone).toBeUndefined()
+    expect(data.notes).toBeUndefined()
+    expect(data.id).toBeDefined()
     expect(data.status).toBe('CONFIRMED')
   })
 })

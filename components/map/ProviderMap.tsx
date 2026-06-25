@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import type { Map, Marker } from 'leaflet'
+import type { Map as LeafletMap, Marker } from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 export interface MapProvider {
   id: string
@@ -19,17 +20,27 @@ interface ProviderMapProps {
   onPinClick?: (slug: string) => void
 }
 
-function ensureLeafletCSS() {
-  if (document.querySelector('link[data-leaflet]')) return
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-  link.setAttribute('data-leaflet', '1')
-  document.head.appendChild(link)
-}
-
 // Sydney CBD as fallback — change if deploying elsewhere
 const FALLBACK_CENTER: [number, number] = [-33.8688, 151.2093]
+
+function buildIcon(L: typeof import('leaflet'), provider: MapProvider, isHighlighted: boolean) {
+  const el = document.createElement('div')
+  el.className = [
+    'w-8 h-8 rounded-full border-2 flex items-center justify-center',
+    'text-xs font-bold cursor-pointer transition-transform select-none shadow',
+    isHighlighted
+      ? 'bg-indigo-600 border-white scale-125 text-white shadow-lg'
+      : 'bg-white border-indigo-500 text-indigo-600 hover:scale-110',
+  ].join(' ')
+  el.textContent = provider.name[0]
+  return L.divIcon({
+    html: el.outerHTML,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  })
+}
 
 export function ProviderMap({
   providers,
@@ -39,13 +50,20 @@ export function ProviderMap({
   onPinClick,
 }: ProviderMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<Map | null>(null)
-  const markersRef = useRef<Marker[]>([])
+  const mapRef = useRef<LeafletMap | null>(null)
+  // Keyed marker store for efficient per-marker icon updates (avoids full redraw on hover)
+  const markerMapRef = useRef<globalThis.Map<string, Marker>>(new globalThis.Map())
   const onPinClickRef = useRef(onPinClick)
+  // Stable ref to providers so the highlight effect can look up by id without re-running
+  const providersRef = useRef<MapProvider[]>(providers)
 
   useEffect(() => {
     onPinClickRef.current = onPinClick
   })
+
+  useEffect(() => {
+    providersRef.current = providers
+  }, [providers])
 
   // ── Init map once ──────────────────────────────────────────
   useEffect(() => {
@@ -54,14 +72,15 @@ export function ProviderMap({
     import('leaflet').then((L) => {
       if (!containerRef.current || mapRef.current) return
 
-      ensureLeafletCSS()
-
       // @ts-expect-error leaflet internal
       delete L.Icon.Default.prototype._getIconUrl
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        iconUrl: require('leaflet/dist/images/marker-icon.png'),
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
       })
 
       mapRef.current = L.map(containerRef.current).setView(
@@ -77,8 +96,11 @@ export function ProviderMap({
     })
 
     return () => {
+      // Capture ref values at cleanup time to satisfy react-hooks/exhaustive-deps
+      const mm = markerMapRef.current
       mapRef.current?.remove()
       mapRef.current = null
+      mm.clear()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -89,36 +111,20 @@ export function ProviderMap({
     mapRef.current.flyTo(center, zoom, { animate: true, duration: 1 })
   }, [center, zoom])
 
-  // ── Re-draw markers; auto-fit bounds when no center given ──
+  // ── Re-draw markers when providers/center change (NOT highlightedId) ──
   useEffect(() => {
     if (!mapRef.current) return
 
     import('leaflet').then((L) => {
       if (!mapRef.current) return
 
-      markersRef.current.forEach((m) => m.remove())
-      markersRef.current = []
+      // Remove all existing markers
+      markerMapRef.current.forEach((m) => m.remove())
+      markerMapRef.current.clear()
 
       providers.forEach((p) => {
         const isHighlighted = highlightedId === p.id
-
-        const el = document.createElement('div')
-        el.className = [
-          'w-8 h-8 rounded-full border-2 flex items-center justify-center',
-          'text-xs font-bold cursor-pointer transition-transform select-none shadow',
-          isHighlighted
-            ? 'bg-indigo-600 border-white scale-125 text-white shadow-lg'
-            : 'bg-white border-indigo-500 text-indigo-600 hover:scale-110',
-        ].join(' ')
-        el.textContent = p.name[0]
-
-        const icon = L.divIcon({
-          html: el.outerHTML,
-          className: '',
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -18],
-        })
+        const icon = buildIcon(L, p, isHighlighted)
 
         const marker = L.marker([p.lat, p.lng], { icon })
           .addTo(mapRef.current!)
@@ -128,7 +134,7 @@ export function ProviderMap({
           )
 
         marker.on('click', () => onPinClickRef.current?.(p.slug))
-        markersRef.current.push(marker)
+        markerMapRef.current.set(p.id, marker)
       })
 
       // Auto-fit to show all providers when no explicit center is provided
@@ -137,7 +143,20 @@ export function ProviderMap({
         mapRef.current.fitBounds(bounds, { padding: [48, 48], maxZoom: 13 })
       }
     })
-  }, [providers, highlightedId, center])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providers, center])
+
+  // ── Update only affected markers' icons when highlightedId changes ──
+  useEffect(() => {
+    if (markerMapRef.current.size === 0) return
+    import('leaflet').then((L) => {
+      markerMapRef.current.forEach((marker, id) => {
+        const provider = providersRef.current.find((p) => p.id === id)
+        if (!provider) return
+        marker.setIcon(buildIcon(L, provider, highlightedId === id))
+      })
+    })
+  }, [highlightedId])
 
   return <div ref={containerRef} className="h-full w-full rounded-xl" />
 }

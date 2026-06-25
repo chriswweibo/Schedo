@@ -1,5 +1,6 @@
 'use client'
-import { useRef, useState } from 'react'
+import Image from 'next/image'
+import { useRef, useState, useEffect } from 'react'
 import { format } from 'date-fns'
 
 interface Job {
@@ -14,6 +15,22 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState<Job | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (lightbox) {
+      closeButtonRef.current?.focus()
+    }
+  }, [lightbox])
+
+  useEffect(() => {
+    if (!lightbox) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [lightbox])
 
   function scrollTo(index: number) {
     const track = trackRef.current
@@ -49,7 +66,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active > 0 && (
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Previous"
           >
             ‹
@@ -71,8 +88,13 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             >
               {job.imageUrl ? (
                 <div className="relative h-52 w-full overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={job.imageUrl} alt={job.title} className="h-full w-full object-cover" />
+                  <Image
+                    src={job.imageUrl}
+                    alt={job.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <p className="absolute bottom-3 left-3 right-3 text-white text-sm font-semibold leading-snug drop-shadow">
                     {job.title}
@@ -102,7 +124,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
         {active < jobs.length - 1 && (
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-md text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Next"
           >
             ›
@@ -129,6 +151,9 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
       {/* Lightbox */}
       {lightbox && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Job photo"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setLightbox(null)}
         >
@@ -137,8 +162,15 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             {lightbox.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={lightbox.imageUrl} alt={lightbox.title} className="w-full max-h-[60vh] object-contain bg-muted" />
+              <div className="relative aspect-video w-full bg-muted">
+                <Image
+                  src={lightbox.imageUrl}
+                  alt={lightbox.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 672px"
+                />
+              </div>
             )}
             <div className="p-5">
               <p className="font-semibold text-foreground">{lightbox.title}</p>
@@ -150,6 +182,7 @@ export function WorksCarousel({ jobs }: { jobs: Job[] }) {
               </p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={() => setLightbox(null)}
               className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition text-sm"
               aria-label="Close"

@@ -34,7 +34,7 @@ export async function PATCH(
 
     const formattedDate = format(booking.date, 'MMMM d, yyyy')
     if (status === 'CONFIRMED') {
-      await sendRequestAccepted({
+      void sendRequestAccepted({
         guestEmail: booking.guestEmail,
         guestName: booking.guestName,
         providerName: booking.provider.name,
@@ -42,14 +42,14 @@ export async function PATCH(
         startTime: booking.startTime,
         endTime: booking.endTime,
         profession: booking.provider.profession,
-      })
+      }).catch((e) => console.error('[email] sendRequestAccepted failed', e))
     } else if (status === 'DECLINED') {
-      await sendRequestDeclined({
+      void sendRequestDeclined({
         guestEmail: booking.guestEmail,
         guestName: booking.guestName,
         providerName: booking.provider.name,
         date: formattedDate,
-      })
+      }).catch((e) => console.error('[email] sendRequestDeclined failed', e))
     }
 
     return NextResponse.json(updated)

@@ -130,6 +130,8 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
               key={day.toISOString()}
               onClick={() => handleDayClick(day)}
               disabled={!isClickable}
+              aria-label={`${format(day, 'EEEE, d MMMM yyyy')}${isFullyBooked ? ', fully booked' : !isClickable ? ', unavailable' : ''}`}
+              aria-pressed={!!isSelected}
               className={`rounded py-1 text-xs transition
                 ${isSelected ? 'bg-primary text-white' : ''}
                 ${isClickable && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-white' : ''}
@@ -169,6 +171,7 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
             <p className="text-xs text-red-500">{slotsError}</p>
           ) : (
             <>
+              <p className="text-xs text-muted-foreground mb-2">Click a start time, then an end time to pick a range.</p>
               <div className="grid grid-cols-4 gap-1.5">
                 {slots.map((slot) => {
                   const key = slot.startTime
@@ -179,19 +182,19 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
 
                   let cls = 'h-8 rounded-lg text-[11px] font-medium transition-all '
                   if (slot.status === 'outside')      cls += 'bg-muted text-muted-foreground/50 cursor-default'
-                  else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 cursor-default line-through'
+                  else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 cursor-default line-through'
                   else if (slot.status === 'blocked') cls += 'bg-muted text-muted-foreground cursor-default'
                   else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
                   else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
                   else if (inPreview)                 cls += 'bg-indigo-400 text-white opacity-75'
-                  else                                cls += 'bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer'
+                  else                                cls += 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer'
 
                   return (
                     <button
                       key={key}
                       type="button"
                       disabled={!isAvailable}
-                      aria-label={`${slot.startTime} – ${slot.status}`}
+                      aria-label={`${slot.startTime} to ${slot.endTime}, ${slot.status}`}
                       onMouseEnter={() => { if (isAvailable) setHoverKey(key) }}
                       onMouseLeave={() => setHoverKey(null)}
                       onClick={() => {
@@ -230,6 +233,21 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                 })}
               </div>
 
+              {/* Single-hour booking: show Book link as soon as one slot is anchored */}
+              {selection.phase === 'anchored' && (() => {
+                const anchorSlot = slots.find((s) => s.startTime === selection.anchorKey)
+                if (!anchorSlot) return null
+                return (
+                  <Link
+                    href={`/booking/${providerId}?date=${format(selectedDate!, 'yyyy-MM-dd')}&start=${anchorSlot.startTime}&end=${anchorSlot.endTime}`}
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                  >
+                    Book {anchorSlot.startTime}–{anchorSlot.endTime} · 1h
+                  </Link>
+                )
+              })()}
+
+              {/* Range booking: shown after two different slots are selected */}
               {selectionRange && selectionRange.length > 0 && (() => {
                 const startTime = selectionRange[0].startTime
                 const endTime   = selectionRange[selectionRange.length - 1].endTime

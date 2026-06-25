@@ -26,18 +26,20 @@ export function SearchFilters({ initialValues }: SearchFiltersProps) {
   return (
     <form onSubmit={handleSearch} className="flex flex-wrap items-end gap-2">
       <Field
-        placeholder="Service type"
+        label="Service type"
+        placeholder="e.g. Plumber"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         className="w-48"
       />
       <Field
+        label="Provider name"
         placeholder="Provider name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="w-40"
       />
-      <Field type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40" />
+      <Field type="date" aria-label="Date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40" />
       <Button type="submit">Search</Button>
     </form>
   )

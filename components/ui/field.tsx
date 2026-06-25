@@ -10,11 +10,13 @@ export interface FieldProps extends React.ComponentProps<'input'> {
 
 const Field = React.forwardRef<HTMLInputElement, FieldProps>(
   ({ label, error, id, className, ...props }, ref) => {
+    const reactId = React.useId()
+    const inputId = id ?? reactId
     return (
       <div className="flex flex-col gap-1.5">
-        {label && <Label htmlFor={id}>{label}</Label>}
+        {label && <Label htmlFor={inputId}>{label}</Label>}
         <Input
-          id={id}
+          id={inputId}
           ref={ref}
           className={cn(error && 'border-destructive focus-visible:ring-destructive', className)}
           {...props}

@@ -31,6 +31,7 @@ Copy `.env.local.example` to `.env.local`. Required keys:
 - `ENCRYPTION_KEY` — base64 32-byte key used to encrypt guest PII (`Booking.guestName/guestEmail/guestPhone/notes`) at rest via AES-256-GCM. If unset, the app throws when writing guest PII (it will not silently store plaintext).
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth (provider sign-in + Calendar sync). When unset, the Google provider is not registered and the feature is dormant. Redirect URI: `<NEXTAUTH_URL>/api/auth/callback/google`.
 - `NEXT_PUBLIC_GOOGLE_ENABLED` — `"true"` to render the "Continue with Google" buttons.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — optional; when both are set, enables per-IP sliding-window rate limiting on public booking/search endpoints (create a free Upstash Redis DB at upstash.com). When unset, rate limiting is a silent no-op.
 
 ## Architecture
 
@@ -93,7 +94,20 @@ Only providers authenticate. NextAuth uses the `credentials` provider with bcryp
 
 ### Search & Geo
 
-`GET /api/providers` loads up to 200 visible providers, applies geo radius filter (haversine), keyword/profession filter, name filter, and day-of-week availability filter in-process, then returns the top 50 sorted by distance. Geocoding of provider addresses (settings page) is done server-side using the `MAPBOX_TOKEN`.
+Provider search is unified in `lib/search.ts` (`searchProviders()`). Both `GET /api/providers` and the `app/search/page.tsx` Server Component call it.
+
+**DB-level prefilter (bounding box):** when lat/lng are supplied, a ±100 km bounding-box `WHERE` clause is added so Postgres can use the `(lat, lng)` B-tree index to discard far-away rows before returning them to Node. A safety `take: 500` cap limits the result set further.
+
+**In-JS refinements (identical to original, applied on the reduced set):** precise haversine radius (vs. each provider's `acceptedRadiusKm`), keyword/profession substring filter, name substring filter, day-of-week availability filter. Sort order: distance asc, tie-break by `createdAt` desc.
+
+**Pagination:** `searchProviders` accepts `page` / `pageSize` and returns `{ providers, page, pageSize, hasMore }`. The API returns the providers array as before (backward-compatible); pagination metadata is available via `X-Page` / `X-Page-Size` / `X-Has-More` response headers and by passing a `?page=` query param.
+
+**Indexes added (migration `20260626120000_search_indexes`):**
+- `Provider(lat, lng)` — B-tree, used by the bounding-box prefilter.
+- `Provider(keywords)` — GIN index for future full-text keyword search.
+- `CompletedJob(providerId, completedAt)` — supports sorted job lookups per provider.
+
+Geocoding of provider addresses (settings page) is done server-side using the `MAPBOX_TOKEN`.
 
 ### Booking Flow
 
