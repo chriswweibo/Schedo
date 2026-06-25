@@ -465,7 +465,7 @@ function PastWorkSection({
                 <button
                   type="button"
                   onClick={() => handleDelete(job.id)}
-                  className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                  className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 transition opacity-0 group-hover:opacity-100"
                   title="Delete"
                 >
                   ✕
@@ -746,8 +746,8 @@ function CalendarTab({ availability }: { availability: Availability[] }) {
                   cellClass += 'bg-muted cursor-default'
                 } else if (status === 'available') {
                   cellClass += isToday
-                    ? 'bg-indigo-50/40 hover:bg-emerald-50 cursor-pointer group'
-                    : 'bg-card hover:bg-emerald-50 cursor-pointer group'
+                    ? 'bg-indigo-50/40 dark:bg-indigo-950/40 hover:bg-emerald-50 dark:hover:bg-emerald-950 cursor-pointer group'
+                    : 'bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950 cursor-pointer group'
                   inner = (
                     <span className="opacity-0 group-hover:opacity-100 text-[9px] font-semibold text-emerald-600 transition-opacity">
                       Block
@@ -799,7 +799,7 @@ function CalendarTab({ availability }: { availability: Availability[] }) {
       <div className="flex flex-wrap gap-2">
         {[
           { bg: 'bg-card ring-1 ring-border', label: 'Available' },
-          { bg: 'bg-emerald-50 ring-1 ring-emerald-200', label: 'Hover to block' },
+          { bg: 'bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-200 dark:ring-emerald-800', label: 'Hover to block' },
           { bg: 'bg-amber-400', label: 'Pending request' },
           { bg: 'bg-indigo-500', label: 'Confirmed' },
           { bg: 'bg-slate-700', label: 'Blocked' },

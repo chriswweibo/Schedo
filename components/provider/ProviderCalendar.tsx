@@ -182,12 +182,12 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
 
                   let cls = 'h-8 rounded-lg text-[11px] font-medium transition-all '
                   if (slot.status === 'outside')      cls += 'bg-muted text-muted-foreground/50 cursor-default'
-                  else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 cursor-default line-through'
+                  else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 cursor-default line-through'
                   else if (slot.status === 'blocked') cls += 'bg-muted text-muted-foreground cursor-default'
                   else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
                   else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
                   else if (inPreview)                 cls += 'bg-indigo-400 text-white opacity-75'
-                  else                                cls += 'bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer'
+                  else                                cls += 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer'
 
                   return (
                     <button

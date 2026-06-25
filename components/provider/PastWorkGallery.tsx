@@ -83,7 +83,7 @@ function JobCard({ job }: { job: Job }) {
                 <Image src={job.imageUrl} alt={job.title} fill className="object-cover" />
               </div>
             ) : (
-              <div className="flex h-48 items-center justify-center bg-indigo-50 text-5xl">🔧</div>
+              <div className="flex h-48 items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-5xl">🔧</div>
             )}
             <div className="p-5">
               <p className="font-semibold text-foreground">{job.title}</p>

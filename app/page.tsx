@@ -1,6 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HomeSearchForm } from './HomeSearchForm'
 import { HomeMap } from './HomeMap'
+
+export const metadata: Metadata = {
+  title: 'Schedo — Book Local Service Providers Near You',
+  description:
+    'Find and instantly book trusted local electricians, plumbers, gardeners, handymen, and more. No account needed — just pick a time and go.',
+}
 
 const CATEGORY_GROUPS = [
   {
@@ -87,7 +94,7 @@ export default function HomePage() {
                     <Link
                       key={cat.keyword}
                       href={`/search?keyword=${encodeURIComponent(cat.keyword)}`}
-                      className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                      className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
                     >
                       <span className="leading-none">{cat.icon}</span>
                       {cat.label}
