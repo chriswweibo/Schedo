@@ -619,7 +619,10 @@ function getSunday(d: Date) {
   return date
 }
 
-function fmt(d: Date) { return d.toISOString().slice(0, 10) }
+// Local Y-M-D (NOT toISOString/UTC) — calendar cells are built at local
+// midnight and bookings are dated by local yyyy-MM-dd, so a UTC conversion
+// here shifts everything a day in +UTC-offset timezones (e.g. AEST).
+function fmt(d: Date) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
 function pad(n: number) { return String(n).padStart(2, '0') }
 
 type SlotStatus = 'outside' | 'available' | 'blocked' | 'pending' | 'confirmed'
