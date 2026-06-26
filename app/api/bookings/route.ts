@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         SELECT 1 FROM "Booking" b
         WHERE b."providerId" = ${providerId}
           AND b."date" >= ${dayStart} AND b."date" <= ${dayEnd}
-          AND b."status" = 'CONFIRMED'
+          AND b."status" IN ('CONFIRMED', 'PENDING')
           AND b."startTime" < ${endTime} AND b."endTime" > ${startTime}
       )
       AND NOT EXISTS (

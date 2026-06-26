@@ -1,4 +1,4 @@
-export type SlotStatus = 'available' | 'booked' | 'blocked' | 'outside'
+export type SlotStatus = 'available' | 'booked' | 'pending' | 'blocked' | 'outside'
 export type TimeSlot = { startTime: string; endTime: string; status: SlotStatus }
 
 const DAY_START = 6   // 06:00
@@ -19,6 +19,7 @@ export function getAllSlots(
 ): TimeSlot[] {
   const avail = availabilities.find((a) => a.dayOfWeek === date.getDay() && a.isActive)
   const confirmed = bookings.filter((b) => b.status === 'CONFIRMED')
+  const pending = bookings.filter((b) => b.status === 'PENDING')
 
   const slots: TimeSlot[] = []
 
@@ -34,6 +35,12 @@ export function getAllSlots(
 
     if (confirmed.some((b) => overlaps(startTime, endTime, b.startTime, b.endTime))) {
       slots.push({ startTime, endTime, status: 'booked' })
+      continue
+    }
+
+    // A pending application holds the slot — not bookable by others until resolved.
+    if (pending.some((b) => overlaps(startTime, endTime, b.startTime, b.endTime))) {
+      slots.push({ startTime, endTime, status: 'pending' })
       continue
     }
 

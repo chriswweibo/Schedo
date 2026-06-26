@@ -157,6 +157,7 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-blue-500" /> Available</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-amber-400" /> Booked</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-orange-400" /> Pending</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-muted-foreground/30" /> Unavailable</span>
             </div>
           </div>
@@ -183,6 +184,7 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
                   let cls = 'h-8 rounded-lg text-[11px] font-medium transition-all '
                   if (slot.status === 'outside')      cls += 'bg-muted text-muted-foreground/50 cursor-default'
                   else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 cursor-default line-through'
+                  else if (slot.status === 'pending') cls += 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 cursor-default'
                   else if (slot.status === 'blocked') cls += 'bg-muted text-muted-foreground cursor-default'
                   else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
                   else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
