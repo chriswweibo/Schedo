@@ -4,6 +4,7 @@ import { BookingRow } from '@/components/dashboard/BookingRow'
 import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 import { WorksCarousel } from '@/components/provider/WorksCarousel'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -231,6 +232,8 @@ function ProfileTab({
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  // Local UI gate: default off; provider settings show only when toggled on.
+  const [isProvider, setIsProvider] = useState(false)
 
   function toggleProfession(name: string) {
     setProfessions((prev) =>
@@ -269,6 +272,15 @@ function ProfileTab({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
+        <label htmlFor="is-provider" className="text-sm font-medium text-foreground">
+          I am a service provider
+        </label>
+        <Switch id="is-provider" checked={isProvider} onCheckedChange={setIsProvider} />
+      </div>
+
+      {isProvider && (
+      <>
       <Card className="p-6">
         <form onSubmit={handleSave} className="flex flex-col gap-5">
 
@@ -349,6 +361,8 @@ function ProfileTab({
       </Card>
 
       <PastWorkSection jobs={jobs} onJobsChanged={onJobsChanged} />
+      </>
+      )}
     </div>
   )
 }
