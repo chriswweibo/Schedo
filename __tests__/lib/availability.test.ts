@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { getAvailableSlots } from '@/lib/availability'
+import { getAvailableSlots, getAllSlots } from '@/lib/availability'
 
 const MON = { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true }
 const baseDate = new Date('2026-05-04') // Monday
@@ -21,10 +21,15 @@ describe('getAvailableSlots', () => {
     expect(slots.find(s => s.startTime === '11:00')).toBeUndefined()
   })
 
-  it('does NOT exclude a PENDING booking', () => {
+  it('holds (excludes) a PENDING booking and marks it pending', () => {
     const bookings = [{ startTime: '11:00', endTime: '12:00', status: 'PENDING' }]
-    const slots = getAvailableSlots([MON], bookings, [], baseDate)
-    expect(slots).toHaveLength(8)
+    // PENDING now holds the slot: it is not bookable by others.
+    const available = getAvailableSlots([MON], bookings, [], baseDate)
+    expect(available).toHaveLength(7)
+    expect(available.find(s => s.startTime === '11:00')).toBeUndefined()
+    // ...and it surfaces as a distinct 'pending' status (vs 'booked' for confirmed).
+    const all = getAllSlots([MON], bookings, [], baseDate)
+    expect(all.find(s => s.startTime === '11:00')?.status).toBe('pending')
   })
 
   it('excludes a blocked slot', () => {
