@@ -73,7 +73,7 @@ export function DashboardClient({
 
   const pendingCount = upcoming.filter((b) => b.status === 'PENDING').length
 
-  function handleStatusChange(id: string, newStatus: 'CONFIRMED' | 'DECLINED') {
+  function handleStatusChange(id: string, newStatus: 'CONFIRMED' | 'DECLINED' | 'CANCELLED') {
     setUpcoming((prev) =>
       prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
     )
@@ -185,7 +185,7 @@ function InboxTab({
   upcoming, onStatusChange,
 }: {
   upcoming: Booking[]
-  onStatusChange: (id: string, newStatus: 'CONFIRMED' | 'DECLINED') => void
+  onStatusChange: (id: string, newStatus: 'CONFIRMED' | 'DECLINED' | 'CANCELLED') => void
 }) {
   return (
     <div className="flex flex-col gap-4">
