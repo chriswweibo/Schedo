@@ -7,6 +7,7 @@ import { waitUntil } from '@vercel/functions'
 import { sendInstantConfirmation, sendRequestSubmitted } from '@/lib/email'
 import { checkRateLimit, clientIp } from '@/lib/ratelimit'
 import { encrypt } from '@/lib/crypto'
+import { bookingManageUrl } from '@/lib/bookingToken'
 
 export async function POST(req: NextRequest) {
   const { ok } = await checkRateLimit('booking:' + clientIp(req), 5, 60)
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
       guestEmail, guestName, providerName: provider.name,
       providerEmail: provider.email, date: formattedDate,
       startTime, endTime, profession: provider.profession,
+      manageUrl: bookingManageUrl(id),
     }
 
     // Send after the response, but keep the function alive until it finishes
