@@ -12,7 +12,7 @@ interface BookingRowProps {
   startTime: string
   endTime: string
   status: 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'CANCELLED'
-  onStatusChange?: (id: string, newStatus: 'CONFIRMED' | 'DECLINED') => void
+  onStatusChange?: (id: string, newStatus: 'CONFIRMED' | 'DECLINED' | 'CANCELLED') => void
 }
 
 export function BookingRow({
@@ -21,7 +21,7 @@ export function BookingRow({
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleAction(newStatus: 'CONFIRMED' | 'DECLINED') {
+  async function handleAction(newStatus: 'CONFIRMED' | 'DECLINED' | 'CANCELLED') {
     setLoading(newStatus)
     setError(null)
     try {
@@ -70,6 +70,19 @@ export function BookingRow({
             {loading === 'DECLINED' ? '…' : 'Decline'}
           </Button>
         </div>
+      )}
+      {status === 'CONFIRMED' && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (window.confirm('Cancel this confirmed booking? The customer will be notified.')) {
+              handleAction('CANCELLED')
+            }
+          }}
+          disabled={loading !== null}
+        >
+          {loading === 'CANCELLED' ? '…' : 'Cancel'}
+        </Button>
       )}
       {error && <p className="w-full text-xs text-red-600">{error}</p>}
     </div>

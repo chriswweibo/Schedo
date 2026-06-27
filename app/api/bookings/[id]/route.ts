@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { waitUntil } from '@vercel/functions'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { sendRequestAccepted, sendRequestDeclined } from '@/lib/email'
+import { sendRequestAccepted, sendRequestDeclined, sendBookingCancelled } from '@/lib/email'
 
 export async function PATCH(
   req: NextRequest,
@@ -54,6 +54,15 @@ export async function PATCH(
           providerName: booking.provider.name,
           date: formattedDate,
         }).catch((e) => console.error('[email] sendRequestDeclined failed', e))
+      )
+    } else if (status === 'CANCELLED') {
+      waitUntil(
+        sendBookingCancelled({
+          guestEmail: booking.guestEmail,
+          guestName: booking.guestName,
+          providerName: booking.provider.name,
+          date: formattedDate,
+        }).catch((e) => console.error('[email] sendBookingCancelled failed', e))
       )
     }
 

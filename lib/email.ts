@@ -109,3 +109,21 @@ export async function sendRequestDeclined(p: {
 <p><a href="${process.env.NEXTAUTH_URL}/search">Search for another provider</a>. — Schedo</p>`,
   })
 }
+
+export async function sendBookingCancelled(p: {
+  guestEmail: string
+  guestName: string
+  providerName: string
+  date: string
+}) {
+  const tx = getTransport()
+  if (!tx) return
+  await tx.sendMail({
+    from: FROM,
+    to: p.guestEmail,
+    subject: `Booking cancelled — ${p.providerName}`,
+    html: `<p>Hi ${p.guestName},</p>
+<p>We're sorry — <strong>${p.providerName}</strong> has had to cancel your confirmed booking on ${p.date}.</p>
+<p><a href="${process.env.NEXTAUTH_URL}/search">Find another provider</a>. — Schedo</p>`,
+  })
+}
