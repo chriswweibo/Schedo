@@ -11,6 +11,10 @@ import type { TimeSlot } from '@/lib/availability'
 interface ProviderCalendarProps {
   providerId: string
   availability: Array<{ dayOfWeek: number; isActive: boolean }>
+  /** When provided, the confirm button calls this with the picked slot
+   *  (used for rescheduling) instead of linking to the booking page. */
+  onPick?: (date: string, startTime: string, endTime: string) => void | Promise<void>
+  pickLabel?: string
 }
 
 type SelectionState =
@@ -18,7 +22,7 @@ type SelectionState =
   | { phase: 'anchored'; anchorKey: string }
   | { phase: 'selected'; startKey: string; endKey: string }
 
-export function ProviderCalendar({ providerId, availability }: ProviderCalendarProps) {
+export function ProviderCalendar({ providerId, availability, onPick, pickLabel }: ProviderCalendarProps) {
   const [month, setMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selection, setSelection] = useState<SelectionState>({ phase: 'idle' })
@@ -239,9 +243,18 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
               {selection.phase === 'anchored' && (() => {
                 const anchorSlot = slots.find((s) => s.startTime === selection.anchorKey)
                 if (!anchorSlot) return null
-                return (
+                const dateStr = format(selectedDate!, 'yyyy-MM-dd')
+                return onPick ? (
+                  <button
+                    type="button"
+                    onClick={() => onPick(dateStr, anchorSlot.startTime, anchorSlot.endTime)}
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                  >
+                    {pickLabel ?? 'Move to'} {anchorSlot.startTime}–{anchorSlot.endTime} · 1h
+                  </button>
+                ) : (
                   <Link
-                    href={`/booking/${providerId}?date=${format(selectedDate!, 'yyyy-MM-dd')}&start=${anchorSlot.startTime}&end=${anchorSlot.endTime}`}
+                    href={`/booking/${providerId}?date=${dateStr}&start=${anchorSlot.startTime}&end=${anchorSlot.endTime}`}
                     className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
                   >
                     Book {anchorSlot.startTime}–{anchorSlot.endTime} · 1h
@@ -253,9 +266,18 @@ export function ProviderCalendar({ providerId, availability }: ProviderCalendarP
               {selectionRange && selectionRange.length > 0 && (() => {
                 const startTime = selectionRange[0].startTime
                 const endTime   = selectionRange[selectionRange.length - 1].endTime
-                return (
+                const dateStr = format(selectedDate!, 'yyyy-MM-dd')
+                return onPick ? (
+                  <button
+                    type="button"
+                    onClick={() => onPick(dateStr, startTime, endTime)}
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                  >
+                    {pickLabel ?? 'Move to'} {startTime}–{endTime} · {selectionRange.length}h
+                  </button>
+                ) : (
                   <Link
-                    href={`/booking/${providerId}?date=${format(selectedDate!, 'yyyy-MM-dd')}&start=${startTime}&end=${endTime}`}
+                    href={`/booking/${providerId}?date=${dateStr}&start=${startTime}&end=${endTime}`}
                     className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
                   >
                     Book {startTime}–{endTime} · {selectionRange.length}h

@@ -5,6 +5,7 @@ import { waitUntil } from '@vercel/functions'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendRequestAccepted, sendRequestDeclined, sendBookingCancelled } from '@/lib/email'
+import { bookingManageUrl } from '@/lib/bookingToken'
 
 export async function PATCH(
   req: NextRequest,
@@ -44,6 +45,7 @@ export async function PATCH(
           startTime: booking.startTime,
           endTime: booking.endTime,
           profession: booking.provider.profession,
+          manageUrl: bookingManageUrl(booking.id),
         }).catch((e) => console.error('[email] sendRequestAccepted failed', e))
       )
     } else if (status === 'DECLINED') {

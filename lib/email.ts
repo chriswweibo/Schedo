@@ -24,7 +24,12 @@ interface BookingEmailParams {
   startTime: string
   endTime: string
   profession: string
+  /** Tokenized self-service link for the guest to view/cancel/reschedule. */
+  manageUrl?: string
 }
+
+const manageLine = (url?: string) =>
+  url ? `<p><a href="${url}">Manage, reschedule, or cancel your booking</a></p>` : ''
 
 export async function sendInstantConfirmation(p: BookingEmailParams) {
   const tx = getTransport()
@@ -37,6 +42,7 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
       html: `<p>Hi ${p.guestName},</p>
 <p>Your booking with <strong>${p.providerName}</strong> (${p.profession}) is confirmed.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
+${manageLine(p.manageUrl)}
 <p>— Schedo</p>`,
     }),
     p.providerEmail
@@ -63,6 +69,7 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
       html: `<p>Hi ${p.guestName},</p>
 <p>Your booking request with <strong>${p.providerName}</strong> (${p.profession}) has been sent.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
+${manageLine(p.manageUrl)}
 <p>We'll let you know once they confirm. — Schedo</p>`,
     }),
     p.providerEmail
@@ -88,6 +95,7 @@ export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerE
     html: `<p>Hi ${p.guestName},</p>
 <p>Great news! <strong>${p.providerName}</strong> has confirmed your booking.</p>
 <p><strong>Date:</strong> ${p.date}<br/><strong>Time:</strong> ${p.startTime} – ${p.endTime}</p>
+${manageLine(p.manageUrl)}
 <p>— Schedo</p>`,
   })
 }
@@ -107,6 +115,44 @@ export async function sendRequestDeclined(p: {
     html: `<p>Hi ${p.guestName},</p>
 <p>Unfortunately, <strong>${p.providerName}</strong> is unable to take your booking for ${p.date}.</p>
 <p><a href="${process.env.NEXTAUTH_URL}/search">Search for another provider</a>. — Schedo</p>`,
+  })
+}
+
+export async function sendProviderBookingCancelled(p: {
+  providerEmail: string
+  guestName: string
+  date: string
+  startTime: string
+  endTime: string
+}) {
+  const tx = getTransport()
+  if (!tx) return
+  await tx.sendMail({
+    from: FROM,
+    to: p.providerEmail,
+    subject: `Booking cancelled by ${p.guestName}`,
+    html: `<p><strong>${p.guestName}</strong> cancelled their booking.</p>
+<p><strong>Was:</strong> ${p.date} · ${p.startTime}–${p.endTime}</p>
+<p>That slot is now free again. View your <a href="${process.env.NEXTAUTH_URL}/dashboard">dashboard</a>.</p>`,
+  })
+}
+
+export async function sendProviderBookingRescheduled(p: {
+  providerEmail: string
+  guestName: string
+  date: string
+  startTime: string
+  endTime: string
+}) {
+  const tx = getTransport()
+  if (!tx) return
+  await tx.sendMail({
+    from: FROM,
+    to: p.providerEmail,
+    subject: `Booking rescheduled by ${p.guestName}`,
+    html: `<p><strong>${p.guestName}</strong> rescheduled their booking.</p>
+<p><strong>New time:</strong> ${p.date} · ${p.startTime}–${p.endTime}</p>
+<p>View it in your <a href="${process.env.NEXTAUTH_URL}/dashboard">dashboard</a>.</p>`,
   })
 }
 
