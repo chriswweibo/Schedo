@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/ui/Navbar'
 import { GuestHeader } from '@/components/ui/GuestHeader'
+import { Logo } from '@/components/ui/Logo'
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -19,8 +20,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border bg-muted/30 px-6 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <span className="text-lg font-bold text-foreground">Schedo</span>
-            <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+            <Logo variant="lockup" tone="mono" size={30} className="text-foreground" />
+            <p className="mt-3 max-w-xs text-sm text-muted-foreground">
               Book trusted local professionals — pick a time and book in minutes, no account needed.
             </p>
           </div>
