@@ -82,9 +82,9 @@ export function BookingForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Field label="Your name" value={form.guestName} onChange={update('guestName')} required />
-      <Field label="Email" type="email" value={form.guestEmail} onChange={update('guestEmail')} required />
-      <Field label="Phone (optional)" type="tel" value={form.guestPhone} onChange={update('guestPhone')} />
+      <Field label="Your name" autoComplete="name" value={form.guestName} onChange={update('guestName')} required />
+      <Field label="Email" type="email" inputMode="email" autoComplete="email" value={form.guestEmail} onChange={update('guestEmail')} required />
+      <Field label="Phone (optional)" type="tel" inputMode="tel" autoComplete="tel" value={form.guestPhone} onChange={update('guestPhone')} />
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-foreground">Notes (optional)</label>
@@ -105,7 +105,7 @@ export function BookingForm({
         </Button>
       ) : (
         <Button type="submit" disabled={loading}>
-          {loading ? 'Processing…' : 'Confirm booking'}
+          {loading ? 'Processing…' : bookingType === 'REQUEST' ? 'Send booking request' : 'Confirm booking'}
         </Button>
       )}
     </form>

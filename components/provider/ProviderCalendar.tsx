@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format,
   addMonths, subMonths, isToday, isBefore, startOfDay
@@ -105,10 +106,15 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
         <button
           onClick={() => { setMonth(subMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }}
           disabled={isCurrentMonth}
-          className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-default"
-        >←</button>
+          aria-label="Previous month"
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
+        ><ChevronLeft className="h-4 w-4" aria-hidden /></button>
         <span className="text-sm font-semibold">{format(month, 'MMMM yyyy')}</span>
-        <button onClick={() => { setMonth(addMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }} className="p-0.5 text-muted-foreground hover:text-foreground">→</button>
+        <button
+          onClick={() => { setMonth(addMonths(month, 1)); setSelection({ phase: 'idle' }); setHoverKey(null) }}
+          aria-label="Next month"
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+        ><ChevronRight className="h-4 w-4" aria-hidden /></button>
       </div>
 
       {/* Day labels */}
@@ -137,8 +143,8 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
               aria-label={`${format(day, 'EEEE, d MMMM yyyy')}${isFullyBooked ? ', fully booked' : !isClickable ? ', unavailable' : ''}`}
               aria-pressed={!!isSelected}
               className={`rounded py-1 text-xs transition
-                ${isSelected ? 'bg-primary text-white' : ''}
-                ${isClickable && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-white' : ''}
+                ${isSelected ? 'bg-primary text-primary-foreground' : ''}
+                ${isClickable && !isSelected ? 'bg-primary-light text-primary hover:bg-primary hover:text-primary-foreground' : ''}
                 ${isFullyBooked ? 'bg-muted text-muted-foreground cursor-default' : ''}
                 ${!isAvail || isPast ? 'text-muted-foreground/50 cursor-default' : ''}
                 ${isToday(day) && !isSelected ? 'font-bold' : ''}
@@ -159,7 +165,7 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
             </p>
             {/* Legend */}
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-blue-500" /> Available</span>
+              <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-primary" /> Available</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-amber-400" /> Booked</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-orange-400" /> Pending</span>
               <span className="flex items-center gap-0.5"><span className="inline-block w-2 h-2 rounded-sm bg-muted-foreground/30" /> Unavailable</span>
@@ -190,10 +196,10 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
                   else if (slot.status === 'booked')  cls += 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 cursor-default line-through'
                   else if (slot.status === 'pending') cls += 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 cursor-default'
                   else if (slot.status === 'blocked') cls += 'bg-muted text-muted-foreground cursor-default'
-                  else if (isAnchor)                  cls += 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300 ring-offset-1'
-                  else if (inSelection)               cls += 'bg-indigo-600 text-white shadow-sm'
-                  else if (inPreview)                 cls += 'bg-indigo-400 text-white opacity-75'
-                  else                                cls += 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer'
+                  else if (isAnchor)                  cls += 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/40 ring-offset-1 ring-offset-background'
+                  else if (inSelection)               cls += 'bg-primary text-primary-foreground shadow-sm'
+                  else if (inPreview)                 cls += 'bg-primary/60 text-primary-foreground'
+                  else                                cls += 'bg-primary-light text-primary hover:bg-primary hover:text-primary-foreground cursor-pointer'
 
                   return (
                     <button
@@ -248,14 +254,14 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
                   <button
                     type="button"
                     onClick={() => onPick(dateStr, anchorSlot.startTime, anchorSlot.endTime)}
-                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition"
                   >
                     {pickLabel ?? 'Move to'} {anchorSlot.startTime}–{anchorSlot.endTime} · 1h
                   </button>
                 ) : (
                   <Link
                     href={`/booking/${providerId}?date=${dateStr}&start=${anchorSlot.startTime}&end=${anchorSlot.endTime}`}
-                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition"
                   >
                     Book {anchorSlot.startTime}–{anchorSlot.endTime} · 1h
                   </Link>
@@ -271,14 +277,14 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
                   <button
                     type="button"
                     onClick={() => onPick(dateStr, startTime, endTime)}
-                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition"
                   >
                     {pickLabel ?? 'Move to'} {startTime}–{endTime} · {selectionRange.length}h
                   </button>
                 ) : (
                   <Link
                     href={`/booking/${providerId}?date=${dateStr}&start=${startTime}&end=${endTime}`}
-                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                    className="mt-3 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition"
                   >
                     Book {startTime}–{endTime} · {selectionRange.length}h
                   </Link>
