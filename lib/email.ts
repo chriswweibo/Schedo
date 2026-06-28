@@ -16,17 +16,20 @@ function getResend() {
   return new Resend(key)
 }
 
-async function send(opts: { to: string; subject: string; html: string }) {
+async function send(opts: { to: string; subject: string; html: string; replyTo?: string }) {
   const resend = getResend()
   if (!resend) return
   await resend.emails.send({
     from: FROM,
-    replyTo: REPLY_TO,
+    replyTo: opts.replyTo ?? REPLY_TO,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
   })
 }
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 interface BookingEmailParams {
   guestEmail: string
@@ -146,6 +149,49 @@ export async function sendProviderBookingRescheduled(p: {
     html: `<p><strong>${p.guestName}</strong> rescheduled their booking.</p>
 <p><strong>New time:</strong> ${p.date} · ${p.startTime}–${p.endTime}</p>
 <p>View it in your <a href="${process.env.NEXTAUTH_URL}/dashboard">dashboard</a>.</p>`,
+  })
+}
+
+// ── Quote requests (group-sent, no date) ─────────────────────
+
+interface QuoteRequestParams {
+  guestName: string
+  guestEmail: string
+  guestPhone?: string | null
+  message: string
+}
+
+/** Sent to each selected provider. Reply-to is the requester so providers
+ *  can respond with a quote directly. */
+export async function sendQuoteRequestToProvider(
+  p: QuoteRequestParams & { providerEmail: string; providerName: string }
+) {
+  const phoneLine = p.guestPhone ? `<br/><strong>Phone:</strong> ${escapeHtml(p.guestPhone)}` : ''
+  await send({
+    to: p.providerEmail,
+    replyTo: p.guestEmail,
+    subject: `New quote request from ${p.guestName}`,
+    html: `<p>Hi ${escapeHtml(p.providerName)},</p>
+<p>You've received a request for a quote on Schedo. Reply to this email to send <strong>${escapeHtml(p.guestName)}</strong> your quote.</p>
+<p><strong>Their request:</strong></p>
+<blockquote style="border-left:3px solid #16a34a;margin:0;padding:4px 12px;color:#374151">${escapeHtml(p.message)}</blockquote>
+<p><strong>Contact:</strong> ${escapeHtml(p.guestEmail)}${phoneLine}</p>
+<p>— Schedo</p>`,
+  })
+}
+
+/** Confirmation to the requester listing who the request went to. */
+export async function sendQuoteRequestConfirmation(
+  p: QuoteRequestParams & { providerNames: string[] }
+) {
+  const list = p.providerNames.map((n) => `<li>${escapeHtml(n)}</li>`).join('')
+  await send({
+    to: p.guestEmail,
+    subject: `Your quote request was sent to ${p.providerNames.length} provider${p.providerNames.length > 1 ? 's' : ''}`,
+    html: `<p>Hi ${escapeHtml(p.guestName)},</p>
+<p>We've sent your request to:</p>
+<ul>${list}</ul>
+<p>They'll reply to you directly at ${escapeHtml(p.guestEmail)} with a quote. — Schedo</p>`,
   })
 }
 

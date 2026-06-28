@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { startOfDay } from 'date-fns'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { decrypt } from '@/lib/crypto'
 import { DashboardClient } from './DashboardClient'
 
 export default async function DashboardPage() {
@@ -45,6 +46,36 @@ export default async function DashboardPage() {
 
   if (!provider) redirect('/auth/login')
 
+  // Quote requests group-sent to this provider. PII is encrypted at rest and
+  // the booking crypto extension doesn't cover QuoteRequest, so decrypt here.
+  // Wrapped defensively so the dashboard still loads if the migration that
+  // creates these tables hasn't been applied yet.
+  let quoteRequests: Array<{
+    id: string; createdAt: Date; guestName: string; guestEmail: string; guestPhone: string | null; message: string
+  }> = []
+  try {
+    const quoteLinks = await prisma.quoteRequestProvider.findMany({
+      where: { providerId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        createdAt: true,
+        quoteRequest: { select: { guestName: true, guestEmail: true, guestPhone: true, message: true } },
+      },
+    })
+    quoteRequests = quoteLinks.map((q) => ({
+      id: q.id,
+      createdAt: q.createdAt,
+      guestName: decrypt(q.quoteRequest.guestName) ?? '',
+      guestEmail: decrypt(q.quoteRequest.guestEmail) ?? '',
+      guestPhone: q.quoteRequest.guestPhone ? decrypt(q.quoteRequest.guestPhone) : null,
+      message: decrypt(q.quoteRequest.message) ?? '',
+    }))
+  } catch (err) {
+    console.error('[dashboard] quote requests query failed', err)
+  }
+
   const upcoming = bookings
 
   return (
@@ -52,6 +83,7 @@ export default async function DashboardPage() {
       provider={provider}
       upcoming={upcoming}
       jobs={jobs}
+      quoteRequests={quoteRequests}
       slug={session.user.slug}
       googleConnected={!!provider.googleId}
     />
