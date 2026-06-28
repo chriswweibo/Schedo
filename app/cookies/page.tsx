@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 }
 
 const UPDATED = 'June 28, 2026'
-const CONTACT = 'schedo.it@gmail.com'
+const CONTACT = 'contact@schedo.me'
 
 function H({ children }: { children: React.ReactNode }) {
   return <h2 className="mt-10 mb-3 text-xl font-semibold text-foreground">{children}</h2>

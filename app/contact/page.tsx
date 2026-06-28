@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Get in touch with the Schedo team — general enquiries, becoming a provider, and privacy requests.',
 }
 
-const CONTACT = 'schedo.it@gmail.com'
+const CONTACT = 'contact@schedo.me'
 
 export default function ContactPage() {
   return (
