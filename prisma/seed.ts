@@ -393,6 +393,197 @@ const PHOTO_SEEDS_BY_PROFESSION: Record<string, number[]> = {
   'Photographer':       [405, 421, 437],
 }
 
+// ── New-category professions (broader Bark-style services) ────
+// Each profession/keyword set is crafted so the homepage category links
+// (/search?keyword=<service>) return results via substring match.
+type NewProfessionDef = ProfessionDef & { jobs: JobTemplate[]; photoSeeds: [number, number] }
+
+const NEW_PROFESSION_DEFS: NewProfessionDef[] = [
+  {
+    name: 'DJ',
+    bio: 'Professional DJ for weddings, parties, and corporate events with a full sound and lighting setup. Reads the room and keeps the dance floor moving all night.',
+    keywords: ['dj', 'wedding dj', 'party dj', 'mobile disco', 'event dj', 'club dj'],
+    jobs: [
+      { title: 'Wedding reception DJ', description: '5-hour set for a 120-guest wedding with MC duties and a full lighting rig included.' },
+      { title: '21st birthday party', description: 'Mobile disco with smoke machine, taking live requests through the night.' },
+    ],
+    photoSeeds: [440, 441],
+  },
+  {
+    name: 'Caterer',
+    bio: 'Event caterer offering grazing tables, canapés, and hot buffets tailored to your guest count and dietary needs. Fresh, locally sourced produce.',
+    keywords: ['caterer', 'catering', 'event catering', 'canapés', 'buffet', 'private catering'],
+    jobs: [
+      { title: 'Corporate lunch catering', description: 'Catered a 50-person corporate lunch with grazing platters and full dietary options.' },
+      { title: 'Engagement party canapés', description: 'Designed and served a canapé menu for an 80-guest engagement celebration.' },
+    ],
+    photoSeeds: [442, 443],
+  },
+  {
+    name: 'Event Planner',
+    bio: 'Detail-obsessed event planner handling weddings, parties, and corporate functions end to end — venues, suppliers, run sheets, and on-the-day coordination.',
+    keywords: ['event planner', 'event planning', 'party planner', 'wedding planner', 'corporate events'],
+    jobs: [
+      { title: 'Wedding coordination', description: 'Full planning and on-the-day coordination for a 100-guest harbourside wedding.' },
+      { title: 'Product launch event', description: 'Organised venue, catering, and run sheet for a brand product launch evening.' },
+    ],
+    photoSeeds: [444, 445],
+  },
+  {
+    name: 'Videographer',
+    bio: 'Videographer producing cinematic wedding films, event coverage, and promotional videos. Professional editing with a fast turnaround.',
+    keywords: ['videographer', 'wedding video', 'event video', 'video production', 'promo video'],
+    jobs: [
+      { title: 'Wedding highlight film', description: 'Filmed and edited a cinematic 4-minute highlight reel plus full ceremony footage.' },
+      { title: 'Business promo video', description: 'Produced a 60-second promotional video for a local café, including drone shots.' },
+    ],
+    photoSeeds: [446, 447],
+  },
+  {
+    name: 'Massage Therapist',
+    bio: 'Qualified remedial massage therapist offering deep tissue, sports, and relaxation massage. Mobile appointments available in your home.',
+    keywords: ['massage therapist', 'remedial massage', 'deep tissue', 'sports massage', 'relaxation massage', 'mobile massage'],
+    jobs: [
+      { title: 'Remedial massage course', description: 'Six-session remedial program resolving chronic shoulder tension for an office worker.' },
+      { title: 'Pre-event sports massage', description: 'Mobile sports massage for a marathon runner in the week before race day.' },
+    ],
+    photoSeeds: [448, 449],
+  },
+  {
+    name: 'Counsellor',
+    bio: 'Registered counsellor providing a safe, confidential space for anxiety, stress, and relationship support. In-person and online sessions.',
+    keywords: ['counsellor', 'counselling', 'therapy', 'mental health', 'relationship counselling', 'anxiety'],
+    jobs: [
+      { title: 'Anxiety support program', description: 'Ten-week CBT-based counselling program supporting a client through workplace anxiety.' },
+      { title: 'Relationship counselling', description: 'Couples sessions improving communication and conflict resolution.' },
+    ],
+    photoSeeds: [450, 451],
+  },
+  {
+    name: 'Nutritionist',
+    bio: 'Accredited nutritionist creating realistic, personalised meal plans for weight management, energy, and sports performance.',
+    keywords: ['nutritionist', 'nutrition', 'diet plan', 'meal planning', 'weight management', 'sports nutrition'],
+    jobs: [
+      { title: 'Personalised meal plan', description: 'Built a 12-week meal plan and shopping guide for sustainable weight management.' },
+      { title: 'Sports nutrition plan', description: 'Designed a race-day fuelling strategy for an amateur cyclist.' },
+    ],
+    photoSeeds: [452, 453],
+  },
+  {
+    name: 'Music Teacher',
+    bio: 'Friendly music teacher offering piano, guitar, and singing lessons for all ages and levels, from first notes to graded exams.',
+    keywords: ['music teacher', 'piano lessons', 'guitar lessons', 'singing lessons', 'music tuition'],
+    jobs: [
+      { title: 'Beginner piano lessons', description: 'Weekly piano lessons taking a 9-year-old from beginner to their first graded exam.' },
+      { title: 'Adult guitar coaching', description: 'Adult beginner guitar lessons — playing first full songs within two months.' },
+    ],
+    photoSeeds: [454, 455],
+  },
+  {
+    name: 'Language Tutor',
+    bio: 'Experienced language tutor offering lessons in English, Spanish, French, and Mandarin — conversational fluency and exam preparation.',
+    keywords: ['language lessons', 'language tutor', 'english lessons', 'spanish lessons', 'french lessons', 'mandarin lessons'],
+    jobs: [
+      { title: 'Conversational Spanish', description: 'Weekly conversational Spanish for an adult preparing for overseas travel.' },
+      { title: 'IELTS English prep', description: 'English coaching helping a student reach their target IELTS band.' },
+    ],
+    photoSeeds: [456, 457],
+  },
+  {
+    name: 'Driving Instructor',
+    bio: 'Patient, fully accredited driving instructor for learners and nervous drivers. Manual and automatic, with structured test preparation.',
+    keywords: ['driving instructor', 'driving lessons', 'learner driver', 'manual lessons', 'test preparation'],
+    jobs: [
+      { title: 'Learner to test-ready', description: 'Took a nervous learner from first lesson to passing on the first attempt.' },
+      { title: 'Refresher lessons', description: 'Confidence-building refresher course for a returning driver after years off the road.' },
+    ],
+    photoSeeds: [458, 459],
+  },
+  {
+    name: 'Accountant',
+    bio: 'Registered accountant for individuals and small businesses — tax returns, BAS, bookkeeping, and payroll. Clear advice, no jargon.',
+    keywords: ['accountant', 'bookkeeping', 'tax return', 'BAS', 'small business accounting', 'payroll'],
+    jobs: [
+      { title: 'Small business BAS', description: 'Quarterly BAS lodgement and a bookkeeping cleanup for a sole trader.' },
+      { title: 'Annual tax return', description: 'Prepared and lodged individual and rental-property tax returns.' },
+    ],
+    photoSeeds: [460, 461],
+  },
+  {
+    name: 'Web Designer',
+    bio: 'Freelance web designer building fast, responsive websites and online stores. From landing pages to full e-commerce, design to launch.',
+    keywords: ['web design', 'web designer', 'website', 'wordpress', 'e-commerce', 'landing page'],
+    jobs: [
+      { title: 'Small business website', description: 'Designed and built a 6-page responsive website with an online enquiry form.' },
+      { title: 'E-commerce store', description: 'Launched a Shopify store with product photography and payment setup.' },
+    ],
+    photoSeeds: [462, 463],
+  },
+  {
+    name: 'Marketing Consultant',
+    bio: 'Marketing consultant helping small businesses grow through social media, SEO, and targeted advertising. Strategy plus hands-on execution.',
+    keywords: ['marketing', 'digital marketing', 'social media', 'SEO', 'advertising', 'branding'],
+    jobs: [
+      { title: 'Social media relaunch', description: 'Rebuilt a café’s Instagram presence, tripling engagement in three months.' },
+      { title: 'SEO audit', description: 'Full SEO audit and content plan lifting a service business onto page one.' },
+    ],
+    photoSeeds: [464, 465],
+  },
+  {
+    name: 'Business Consultant',
+    bio: 'Business consultant supporting startups and small businesses with strategy, operations, and growth planning.',
+    keywords: ['consultant', 'business consulting', 'strategy', 'startup advice', 'operations'],
+    jobs: [
+      { title: 'Startup strategy', description: 'Three-month strategy engagement helping a startup define its go-to-market plan.' },
+      { title: 'Operations review', description: 'Streamlined operations for a growing trades business, cutting admin time in half.' },
+    ],
+    photoSeeds: [466, 467],
+  },
+  {
+    name: 'IT Support Technician',
+    bio: 'IT support technician for homes and small offices — computer repairs, network setup, data recovery, and tech troubleshooting.',
+    keywords: ['it support', 'computer repair', 'tech support', 'network setup', 'data recovery'],
+    jobs: [
+      { title: 'Home network setup', description: 'Installed mesh Wi-Fi and configured a secure home network across a three-storey home.' },
+      { title: 'Laptop data recovery', description: 'Recovered data from a failed drive and migrated everything to a new laptop.' },
+    ],
+    photoSeeds: [468, 469],
+  },
+  {
+    name: 'Pet Carer',
+    bio: 'Loving pet carer offering pet sitting, feeding, and minding for cats, dogs, and small animals. Fully insured with daily photo updates.',
+    keywords: ['pet care', 'pet sitting', 'cat sitting', 'pet feeding', 'pet minding'],
+    jobs: [
+      { title: 'Holiday cat sitting', description: 'Two-week in-home cat sitting with daily feeding, play, and photo updates.' },
+      { title: 'Daily pet feeding', description: 'Twice-daily feeding and check-ins for pets while owners worked long shifts.' },
+    ],
+    photoSeeds: [470, 471],
+  },
+  {
+    name: 'Removalist',
+    bio: 'Reliable removalist for local home and office moves — careful packing, furniture removal, and a man-with-a-van service. Fully insured.',
+    keywords: ['mover', 'removalist', 'house removals', 'furniture removal', 'man with a van', 'moving'],
+    jobs: [
+      { title: 'Two-bedroom move', description: 'Full pack and move of a two-bedroom apartment across Sydney in a single day.' },
+      { title: 'Furniture delivery', description: 'Careful delivery and assembly of bulky furniture up three flights of stairs.' },
+    ],
+    photoSeeds: [472, 473],
+  },
+]
+
+// 2 providers per new profession (34 total)
+const NEW_NAMES = [
+  'Marco Bianchi',    'Yasmin Farah',     'Hugo Lefebvre',    'Priscilla Adeyemi',
+  'Dane Robertson',   'Carmen Delgado',   'Felix Nowak',      'Harriet Quinn',
+  'Omar Haddad',      'Tessa Lindqvist',  'Raj Malhotra',     'Bianca Costa',
+  'Otis Freeman',     'Greta Olsen',      'Damien Cole',      'Sofia Romano',
+  'Caleb Mensah',     'Ingrid Vasquez',   'Theo Karlsson',    'Manon Girard',
+  'Vikram Rao',       'Eleni Georgiou',   'Cody Mitchell',    'Aaliyah Bello',
+  'Bruno Almeida',    'Naomi Fischer',    'Hassan Nazari',    'Polly Drummond',
+  'Andre Santos',     'Mira Kaplan',      'Joel Beckett',     'Saanvi Iyer',
+  'Lars Andersen',    'Cleo Hamilton',
+]
+
 // ── Availability templates ────────────────────────────────────
 type AvailDay = { dayOfWeek: number; startTime: string; endTime: string }
 
@@ -502,6 +693,62 @@ async function main() {
     }
 
     console.log(`  ${(i + 1).toString().padStart(3)}. ${provider.name.padEnd(22)} ${profName.padEnd(22)} ${suburb}`)
+  }
+
+  // ── New-category providers (2 per profession) ───────────────
+  console.log('\nSeeding new-category providers…')
+  let n = 0
+  for (const def of NEW_PROFESSION_DEFS) {
+    for (let k = 0; k < 2; k++) {
+      const idx = 100 + n // continue the global index for suburb/jitter variety
+      const name = NEW_NAMES[n]
+      const slug = slugify(name, idx + 1)
+      const email = `catprovider${n + 1}@demo.schedo.app`
+      const [suburb, baseLat, baseLng] = pick(SUBURBS, idx * 3 + 7)
+
+      const lat = baseLat + (Math.sin(idx * 1.7) * 0.012)
+      const lng = baseLng + (Math.cos(idx * 2.3) * 0.015)
+
+      const availTemplate = pick(AVAIL_TEMPLATES, idx)
+      const bookingMode = pick(BOOKING_MODES, idx)
+      const radius = [10, 15, 20, 25, 30][idx % 5]
+
+      const provider = await prisma.provider.upsert({
+        where: { email },
+        update: {},
+        create: {
+          name,
+          slug,
+          email,
+          passwordHash: hash,
+          profession: def.name,
+          bio: `${def.bio} Based in ${suburb}, Sydney.`,
+          keywords: def.keywords,
+          lat,
+          lng,
+          acceptedRadiusKm: radius,
+          bookingMode,
+          isVisible: true,
+          availability: {
+            create: availTemplate.map((a) => ({ ...a, isActive: true })),
+          },
+        },
+      })
+
+      await prisma.completedJob.deleteMany({ where: { providerId: provider.id } })
+      await prisma.completedJob.createMany({
+        data: def.jobs.map((job, j) => ({
+          providerId: provider.id,
+          title: job.title,
+          description: job.description,
+          imageUrl: `https://picsum.photos/seed/${def.photoSeeds[j % def.photoSeeds.length]}/600/400`,
+          completedAt: new Date(Date.now() - (j + 1) * 90 * 24 * 60 * 60 * 1000),
+        })),
+      })
+
+      console.log(`  ${(n + 1).toString().padStart(3)}. ${provider.name.padEnd(22)} ${def.name.padEnd(22)} ${suburb}`)
+      n++
+    }
   }
 
   console.log('\nDone. All accounts use password:', DEMO_PASSWORD)
