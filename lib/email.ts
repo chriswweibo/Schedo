@@ -1,28 +1,31 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-// Sender shown to recipients. Defaults to the Gmail SMTP account, but can be
-// overridden with MAIL_FROM (e.g. "Schedo <contact@schedo.me>") — note that
-// Gmail only honours a From that is the authenticated account OR a verified
-// "Send mail as" alias on it; otherwise it rewrites the From back.
-const FROM = process.env.MAIL_FROM
-  || (process.env.GMAIL_USER ? `Schedo <${process.env.GMAIL_USER}>` : 'Schedo')
+// Sender shown to recipients. Must be on a domain verified in Resend
+// (e.g. schedo.me). Override with MAIL_FROM.
+const FROM = process.env.MAIL_FROM || 'Schedo <contact@schedo.me>'
 
-// Where replies go. The brand address by default, so customers/providers never
-// reply to the raw Gmail account even if it remains the visible sender.
+// Where replies go.
 const REPLY_TO = process.env.MAIL_REPLY_TO || 'contact@schedo.me'
 
-// Transactional email via Gmail SMTP (nodemailer). Requires GMAIL_USER +
-// GMAIL_APP_PASSWORD (a 16-char Google App Password). If either is unset,
-// email sending is a silent no-op (so local/dev without creds doesn't error).
-// `from` and `replyTo` are set as transport defaults, applied to every message.
-function getTransport() {
-  const user = process.env.GMAIL_USER
-  const pass = process.env.GMAIL_APP_PASSWORD
-  if (!user || !pass) return null
-  return nodemailer.createTransport(
-    { service: 'gmail', auth: { user, pass } },
-    { from: FROM, replyTo: REPLY_TO }
-  )
+// Transactional email via Resend. Requires RESEND_API_KEY and a verified
+// sending domain. If the key is unset, sending is a silent no-op (so local/dev
+// without creds doesn't error).
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) return null
+  return new Resend(key)
+}
+
+async function send(opts: { to: string; subject: string; html: string }) {
+  const resend = getResend()
+  if (!resend) return
+  await resend.emails.send({
+    from: FROM,
+    replyTo: REPLY_TO,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+  })
 }
 
 interface BookingEmailParams {
@@ -42,10 +45,8 @@ const manageLine = (url?: string) =>
   url ? `<p><a href="${url}">Manage, reschedule, or cancel your booking</a></p>` : ''
 
 export async function sendInstantConfirmation(p: BookingEmailParams) {
-  const tx = getTransport()
-  if (!tx) return
   await Promise.all([
-    tx.sendMail({
+    send({
       to: p.guestEmail,
       subject: `Booking confirmed with ${p.providerName}`,
       html: `<p>Hi ${p.guestName},</p>
@@ -55,7 +56,7 @@ ${manageLine(p.manageUrl)}
 <p>— Schedo</p>`,
     }),
     p.providerEmail
-      ? tx.sendMail({
+      ? send({
           to: p.providerEmail,
           subject: `New booking from ${p.guestName}`,
           html: `<p>You have a new confirmed booking from <strong>${p.guestName}</strong>.</p>
@@ -67,10 +68,8 @@ ${manageLine(p.manageUrl)}
 }
 
 export async function sendRequestSubmitted(p: BookingEmailParams) {
-  const tx = getTransport()
-  if (!tx) return
   await Promise.all([
-    tx.sendMail({
+    send({
       to: p.guestEmail,
       subject: `Booking request sent to ${p.providerName}`,
       html: `<p>Hi ${p.guestName},</p>
@@ -80,7 +79,7 @@ ${manageLine(p.manageUrl)}
 <p>We'll let you know once they confirm. — Schedo</p>`,
     }),
     p.providerEmail
-      ? tx.sendMail({
+      ? send({
           to: p.providerEmail,
           subject: `New booking request from ${p.guestName}`,
           html: `<p>You have a new booking request from <strong>${p.guestName}</strong>.</p>
@@ -92,9 +91,7 @@ ${manageLine(p.manageUrl)}
 }
 
 export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerEmail'>) {
-  const tx = getTransport()
-  if (!tx) return
-  await tx.sendMail({
+  await send({
     to: p.guestEmail,
     subject: `Booking confirmed — ${p.providerName} accepted your request`,
     html: `<p>Hi ${p.guestName},</p>
@@ -111,9 +108,7 @@ export async function sendRequestDeclined(p: {
   providerName: string
   date: string
 }) {
-  const tx = getTransport()
-  if (!tx) return
-  await tx.sendMail({
+  await send({
     to: p.guestEmail,
     subject: `Booking request declined`,
     html: `<p>Hi ${p.guestName},</p>
@@ -129,9 +124,7 @@ export async function sendProviderBookingCancelled(p: {
   startTime: string
   endTime: string
 }) {
-  const tx = getTransport()
-  if (!tx) return
-  await tx.sendMail({
+  await send({
     to: p.providerEmail,
     subject: `Booking cancelled by ${p.guestName}`,
     html: `<p><strong>${p.guestName}</strong> cancelled their booking.</p>
@@ -147,9 +140,7 @@ export async function sendProviderBookingRescheduled(p: {
   startTime: string
   endTime: string
 }) {
-  const tx = getTransport()
-  if (!tx) return
-  await tx.sendMail({
+  await send({
     to: p.providerEmail,
     subject: `Booking rescheduled by ${p.guestName}`,
     html: `<p><strong>${p.guestName}</strong> rescheduled their booking.</p>
@@ -164,9 +155,7 @@ export async function sendBookingCancelled(p: {
   providerName: string
   date: string
 }) {
-  const tx = getTransport()
-  if (!tx) return
-  await tx.sendMail({
+  await send({
     to: p.guestEmail,
     subject: `Booking cancelled — ${p.providerName}`,
     html: `<p>Hi ${p.guestName},</p>
