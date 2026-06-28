@@ -1,29 +1,28 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import {
-  Search, CalendarCheck, CheckCircle2, ShieldCheck, Lock, BadgeCheck,
-  Zap, Wrench, Leaf, Sparkles, Hammer, PaintRoller, Wind, Camera, ArrowRight,
+  Search, CalendarCheck, CheckCircle2, ShieldCheck, Lock, BadgeCheck, ArrowRight,
+  Home, Briefcase, PartyPopper, HeartPulse, GraduationCap, PawPrint,
 } from 'lucide-react'
 import { HomeHeroSearch } from './HomeHeroSearch'
 
 export const metadata: Metadata = {
   title: 'Schedo — Book Local Service Providers Near You',
   description:
-    'Find and book trusted local electricians, plumbers, gardeners, cleaners and more. Pick a time, book in minutes — no account needed.',
+    'Find and book trusted local professionals — from home and trades to events, wellness, lessons and business. Pick a time, book in minutes, no account needed.',
 }
 
-const POPULAR = [
-  { label: 'Electrician', keyword: 'electrician', Icon: Zap },
-  { label: 'Plumber', keyword: 'plumber', Icon: Wrench },
-  { label: 'Gardener', keyword: 'gardener', Icon: Leaf },
-  { label: 'Cleaner', keyword: 'cleaner', Icon: Sparkles },
-  { label: 'Handyman', keyword: 'handyman', Icon: Hammer },
-  { label: 'Painter', keyword: 'painter', Icon: PaintRoller },
-  { label: 'HVAC', keyword: 'hvac', Icon: Wind },
-  { label: 'Photographer', keyword: 'photographer', Icon: Camera },
+// Bark-style category groups. Each service links to a keyword search.
+const CATEGORIES = [
+  { name: 'House & Home', Icon: Home, services: ['Cleaner', 'Gardener', 'Electrician', 'Plumber', 'Handyman', 'Painter'] },
+  { name: 'Events & Entertainment', Icon: PartyPopper, services: ['Photographer', 'DJ', 'Caterer', 'Event Planner', 'Videographer'] },
+  { name: 'Health & Wellness', Icon: HeartPulse, services: ['Personal Trainer', 'Massage Therapist', 'Counsellor', 'Nutritionist'] },
+  { name: 'Lessons & Training', Icon: GraduationCap, services: ['Tutor', 'Music Teacher', 'Language Lessons', 'Driving Instructor'] },
+  { name: 'Business', Icon: Briefcase, services: ['Accountant', 'Web Design', 'Marketing', 'Consultant', 'IT Support'] },
+  { name: 'Pet & More', Icon: PawPrint, services: ['Pet Care', 'Dog Walker', 'Locksmith', 'Mover'] },
 ]
 
-const QUICK = ['Electrician', 'Plumber', 'Cleaner', 'Gardener', 'Handyman', 'Locksmith']
+const QUICK = ['Electrician', 'Cleaner', 'Personal Trainer', 'Photographer', 'Tutor', 'Handyman']
 
 const STEPS = [
   { Icon: Search, title: 'Search', body: 'Tell us the service you need and where you are.' },
@@ -51,7 +50,7 @@ export default function HomePage() {
             Get it done.<br />Book a trusted local pro.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-            Electricians, plumbers, gardeners and more — search, pick a time that suits you, and book in minutes.
+            Home &amp; trades, events, wellness, lessons, business — find a trusted local pro, pick a time that suits you, and book in minutes.
           </p>
 
           <div className="mx-auto mt-8 max-w-xl">
@@ -72,29 +71,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Popular services ─────────────────────────────────── */}
+      {/* ── Browse by category ───────────────────────────────── */}
       <section className="mx-auto w-full max-w-6xl px-6 py-16">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Browse popular services</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Pick a category to see providers near you.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Browse by category</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Thousands of services across home, events, wellness and more.</p>
           </div>
           <Link href="/search" className="hidden shrink-0 items-center gap-1 text-sm font-semibold text-primary hover:underline sm:flex">
             View all <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {POPULAR.map(({ label, keyword, Icon }) => (
-            <Link
-              key={keyword}
-              href={`/search?keyword=${encodeURIComponent(keyword)}`}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-sm"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <Icon className="h-5 w-5" aria-hidden />
-              </span>
-              <span className="font-semibold text-foreground">{label}</span>
-            </Link>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {CATEGORIES.map(({ name, Icon, services }) => (
+            <div key={name} className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <h3 className="font-semibold text-foreground">{name}</h3>
+              </div>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {services.map((s) => (
+                  <li key={s}>
+                    <Link
+                      href={`/search?keyword=${encodeURIComponent(s.toLowerCase())}`}
+                      className="inline-block rounded-full border border-border px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                      {s}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       </section>
