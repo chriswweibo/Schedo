@@ -16,6 +16,12 @@ interface ProviderCalendarProps {
    *  (used for rescheduling) instead of linking to the booking page. */
   onPick?: (date: string, startTime: string, endTime: string) => void | Promise<void>
   pickLabel?: string
+  /** When true, selecting a date reveals the time slots beside the calendar
+   *  (the month grid shifts left) instead of below it, with a Back control. */
+  slideToSide?: boolean
+  /** Fires true when a date is selected and false when cleared — lets the
+   *  parent hide surrounding content (e.g. the past-work carousel). */
+  onSelectionChange?: (active: boolean) => void
 }
 
 type SelectionState =
@@ -23,7 +29,7 @@ type SelectionState =
   | { phase: 'anchored'; anchorKey: string }
   | { phase: 'selected'; startKey: string; endKey: string }
 
-export function ProviderCalendar({ providerId, availability, onPick, pickLabel }: ProviderCalendarProps) {
+export function ProviderCalendar({ providerId, availability, onPick, pickLabel, slideToSide, onSelectionChange }: ProviderCalendarProps) {
   const [month, setMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selection, setSelection] = useState<SelectionState>({ phase: 'idle' })
@@ -62,6 +68,7 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
     if (!activeDays.has(day.getDay())) return
     if (isBefore(day, today)) return
     setSelectedDate(day)
+    onSelectionChange?.(true)
     setSelection({ phase: 'idle' })
     setHoverKey(null)
     setLoadingSlots(true)
@@ -78,6 +85,15 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
     } finally {
       setLoadingSlots(false)
     }
+  }
+
+  function clearSelection() {
+    setSelectedDate(null)
+    setSelection({ phase: 'idle' })
+    setHoverKey(null)
+    setSlots([])
+    setSlotsError(null)
+    onSelectionChange?.(false)
   }
 
   const previewSet = useMemo<Set<string>>(() => {
@@ -99,8 +115,13 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
     return new Set(selectionRange.map((s) => s.startTime))
   }, [selectionRange])
 
+  // Two-pane mode: calendar on the left, time slots revealed to the right.
+  const twoPane = !!slideToSide && !!selectedDate
+
   return (
-    <div>
+    <div className={twoPane ? 'flex flex-col gap-5 sm:flex-row sm:items-start' : undefined}>
+      {/* Month panel — shifts left and narrows when a date is picked */}
+      <div className={twoPane ? 'transition-all duration-300 sm:w-72 sm:shrink-0' : undefined}>
       {/* Month nav */}
       <div className="flex items-center justify-between mb-1.5">
         <button
@@ -155,10 +176,20 @@ export function ProviderCalendar({ providerId, availability, onPick, pickLabel }
           )
         })}
       </div>
+      </div>{/* /month panel */}
 
       {/* Slots */}
       {selectedDate && (
-        <div className="mt-3">
+        <div className={twoPane ? 'min-w-0 flex-1 animate-in fade-in slide-in-from-right-4 duration-300' : 'mt-3'}>
+          {slideToSide && (
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden /> Back
+            </button>
+          )}
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-foreground">
               {format(selectedDate, 'EEEE, MMMM d')}

@@ -3,8 +3,7 @@ export const revalidate = 300
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import dynamic from 'next/dynamic'
-import { ProviderCalendar } from '@/components/provider/ProviderCalendar'
+import { ProfileBooking } from '@/components/provider/ProfileBooking'
 import { Card } from '@/components/ui/card'
 import { prisma } from '@/lib/prisma'
 
@@ -22,16 +21,6 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: { title, description, images: provider.avatarUrl ? [provider.avatarUrl] : [] },
   }
 }
-
-const WorksCarousel = dynamic(
-  () => import('@/components/provider/WorksCarousel').then((m) => m.WorksCarousel),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-52 rounded-2xl bg-muted animate-pulse" />
-    ),
-  }
-)
 
 async function getProvider(slug: string) {
   return prisma.provider.findUnique({
@@ -89,23 +78,12 @@ export default async function ProviderProfilePage({
         </div>
       </Card>
 
-      {/* ── Past work + Calendar ────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Past work</h2>
-          <WorksCarousel jobs={provider.completedJobs} />
-        </section>
-
-        <section id="availability">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Book a slot</h2>
-          <Card className="p-4">
-            <ProviderCalendar
-              providerId={provider.id}
-              availability={provider.availability}
-            />
-          </Card>
-        </section>
-      </div>
+      {/* ── Past work + Calendar (two-pane on date select) ──── */}
+      <ProfileBooking
+        providerId={provider.id}
+        availability={provider.availability}
+        jobs={provider.completedJobs}
+      />
 
     </main>
   )
