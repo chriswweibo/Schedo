@@ -68,6 +68,7 @@ export function AvatarUpload({ initialUrl, name }: { initialUrl: string | null; 
         return
       }
       setUrl(data.avatarUrl)
+      window.dispatchEvent(new Event('avatar-updated')) // refresh the navbar avatar
       router.refresh() // update the avatar shown elsewhere (profile, search)
     } catch {
       setError('Could not process that image. Please try another.')
@@ -87,6 +88,7 @@ export function AvatarUpload({ initialUrl, name }: { initialUrl: string | null; 
         return
       }
       setUrl(null)
+      window.dispatchEvent(new Event('avatar-updated'))
       router.refresh()
     } catch {
       setError('Network error. Please try again.')
