@@ -7,45 +7,30 @@ type LogoProps = {
 }
 
 export function Logo({ size = 36, variant = 'mark', textColor = 'auto' }: LogoProps) {
-  // Calendar card with a confirmed (checked) day — Schedo's "book a time slot"
-  // concept — in the green brand palette (#16A34A).
+  // Clock-tick fusion: a clock whose hands form a checkmark — "scheduled"
+  // (time) + "confirmed" (done) — in the green brand palette (#16A34A).
   const mark = (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Background */}
+      {/* Tile background */}
       <rect width="36" height="36" rx="9" fill="#16A34A"/>
 
       {/* Shine overlay */}
       <rect width="36" height="18" rx="9" fill="white" fillOpacity="0.08"/>
 
-      {/* Calendar card */}
-      <rect x="6" y="10" width="24" height="21" rx="3" fill="white"/>
+      {/* Clock face */}
+      <circle cx="18" cy="18" r="10" stroke="white" strokeWidth="2.4" fill="none"/>
 
-      {/* Header band */}
-      <rect x="6" y="10" width="24" height="7.5" rx="3" fill="#15803D"/>
-      <rect x="6" y="14.5" width="24" height="3" fill="#15803D"/>
-
-      {/* Binding posts */}
-      <rect x="11.5" y="7" width="3" height="6" rx="1.5" fill="white"/>
-      <rect x="21.5" y="7" width="3" height="6" rx="1.5" fill="white"/>
-
-      {/* Day cells — row 1 */}
-      <rect x="8.5" y="20" width="5" height="3.5" rx="1" fill="#DCFCE7"/>
-      <rect x="15.5" y="20" width="5" height="3.5" rx="1" fill="#16A34A"/>
-      <rect x="22.5" y="20" width="5" height="3.5" rx="1" fill="#DCFCE7"/>
-
-      {/* Day cells — row 2 */}
-      <rect x="8.5" y="25" width="5" height="3.5" rx="1" fill="#16A34A"/>
-      <rect x="15.5" y="25" width="5" height="3.5" rx="1" fill="#DCFCE7"/>
-      <rect x="22.5" y="25" width="5" height="3.5" rx="1" fill="#16A34A"/>
-
-      {/* Checkmark on the confirmed day */}
+      {/* Hands forming a checkmark — short (hour) + long (minute) */}
       <path
-        d="M23.5 26.8 L24.5 27.8 L26.2 25.8"
+        d="M14.6 14.4 L18 18 L25 11.2"
         stroke="white"
-        strokeWidth="1.1"
+        strokeWidth="2.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
+      {/* Center hub */}
+      <circle cx="18" cy="18" r="1.6" fill="white"/>
     </svg>
   )
 
