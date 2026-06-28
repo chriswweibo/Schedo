@@ -1,19 +1,29 @@
 import nodemailer from 'nodemailer'
 
+// Sender shown to recipients. Defaults to the Gmail SMTP account, but can be
+// overridden with MAIL_FROM (e.g. "Schedo <contact@schedo.me>") — note that
+// Gmail only honours a From that is the authenticated account OR a verified
+// "Send mail as" alias on it; otherwise it rewrites the From back.
+const FROM = process.env.MAIL_FROM
+  || (process.env.GMAIL_USER ? `Schedo <${process.env.GMAIL_USER}>` : 'Schedo')
+
+// Where replies go. The brand address by default, so customers/providers never
+// reply to the raw Gmail account even if it remains the visible sender.
+const REPLY_TO = process.env.MAIL_REPLY_TO || 'contact@schedo.me'
+
 // Transactional email via Gmail SMTP (nodemailer). Requires GMAIL_USER +
 // GMAIL_APP_PASSWORD (a 16-char Google App Password). If either is unset,
 // email sending is a silent no-op (so local/dev without creds doesn't error).
+// `from` and `replyTo` are set as transport defaults, applied to every message.
 function getTransport() {
   const user = process.env.GMAIL_USER
   const pass = process.env.GMAIL_APP_PASSWORD
   if (!user || !pass) return null
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  })
+  return nodemailer.createTransport(
+    { service: 'gmail', auth: { user, pass } },
+    { from: FROM, replyTo: REPLY_TO }
+  )
 }
-
-const FROM = process.env.GMAIL_USER ? `Schedo <${process.env.GMAIL_USER}>` : 'Schedo'
 
 interface BookingEmailParams {
   guestEmail: string
@@ -36,7 +46,6 @@ export async function sendInstantConfirmation(p: BookingEmailParams) {
   if (!tx) return
   await Promise.all([
     tx.sendMail({
-      from: FROM,
       to: p.guestEmail,
       subject: `Booking confirmed with ${p.providerName}`,
       html: `<p>Hi ${p.guestName},</p>
@@ -47,7 +56,6 @@ ${manageLine(p.manageUrl)}
     }),
     p.providerEmail
       ? tx.sendMail({
-          from: FROM,
           to: p.providerEmail,
           subject: `New booking from ${p.guestName}`,
           html: `<p>You have a new confirmed booking from <strong>${p.guestName}</strong>.</p>
@@ -63,7 +71,6 @@ export async function sendRequestSubmitted(p: BookingEmailParams) {
   if (!tx) return
   await Promise.all([
     tx.sendMail({
-      from: FROM,
       to: p.guestEmail,
       subject: `Booking request sent to ${p.providerName}`,
       html: `<p>Hi ${p.guestName},</p>
@@ -74,7 +81,6 @@ ${manageLine(p.manageUrl)}
     }),
     p.providerEmail
       ? tx.sendMail({
-          from: FROM,
           to: p.providerEmail,
           subject: `New booking request from ${p.guestName}`,
           html: `<p>You have a new booking request from <strong>${p.guestName}</strong>.</p>
@@ -89,7 +95,6 @@ export async function sendRequestAccepted(p: Omit<BookingEmailParams, 'providerE
   const tx = getTransport()
   if (!tx) return
   await tx.sendMail({
-    from: FROM,
     to: p.guestEmail,
     subject: `Booking confirmed — ${p.providerName} accepted your request`,
     html: `<p>Hi ${p.guestName},</p>
@@ -109,7 +114,6 @@ export async function sendRequestDeclined(p: {
   const tx = getTransport()
   if (!tx) return
   await tx.sendMail({
-    from: FROM,
     to: p.guestEmail,
     subject: `Booking request declined`,
     html: `<p>Hi ${p.guestName},</p>
@@ -128,7 +132,6 @@ export async function sendProviderBookingCancelled(p: {
   const tx = getTransport()
   if (!tx) return
   await tx.sendMail({
-    from: FROM,
     to: p.providerEmail,
     subject: `Booking cancelled by ${p.guestName}`,
     html: `<p><strong>${p.guestName}</strong> cancelled their booking.</p>
@@ -147,7 +150,6 @@ export async function sendProviderBookingRescheduled(p: {
   const tx = getTransport()
   if (!tx) return
   await tx.sendMail({
-    from: FROM,
     to: p.providerEmail,
     subject: `Booking rescheduled by ${p.guestName}`,
     html: `<p><strong>${p.guestName}</strong> rescheduled their booking.</p>
@@ -165,7 +167,6 @@ export async function sendBookingCancelled(p: {
   const tx = getTransport()
   if (!tx) return
   await tx.sendMail({
-    from: FROM,
     to: p.guestEmail,
     subject: `Booking cancelled — ${p.providerName}`,
     html: `<p>Hi ${p.guestName},</p>
