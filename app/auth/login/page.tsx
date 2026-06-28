@@ -35,7 +35,7 @@ function LoginForm() {
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Brand panel */}
       <div className="hidden lg:flex flex-col justify-between bg-stone-900 px-12 py-16 text-white">
-        <Link href="/"><Logo variant="lockup" size={32} textColor="light" /></Link>
+        <Link href="/"><Logo variant="lockup" size={32} tone="mono" /></Link>
         <div>
           <p className="text-4xl font-bold leading-tight mb-4">
             Welcome back to your provider dashboard
