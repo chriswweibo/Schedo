@@ -5,6 +5,8 @@ import {
   Home, Briefcase, PartyPopper, HeartPulse, GraduationCap, PawPrint,
 } from 'lucide-react'
 import { HomeHeroSearch } from './HomeHeroSearch'
+import { LottieIcon } from '@/components/ui/LottieIcon'
+import pulse from '@/components/lottie/pulse.json'
 
 export const metadata: Metadata = {
   title: 'Schedo — Book Local Service Providers Near You',
@@ -119,8 +121,9 @@ export default function HomePage() {
             {STEPS.map(({ Icon, title, body }, i) => (
               <li key={title} className="relative rounded-2xl border border-border bg-card p-6">
                 <span className="absolute right-4 top-4 text-4xl font-bold text-primary/15">{i + 1}</span>
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light text-primary">
-                  <Icon className="h-6 w-6" aria-hidden />
+                <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light text-primary">
+                  <LottieIcon animationData={pulse} className="pointer-events-none absolute -inset-4" />
+                  <Icon className="relative h-6 w-6" aria-hidden />
                 </span>
                 <h3 className="mt-4 text-lg font-semibold text-foreground">{title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>

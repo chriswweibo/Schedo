@@ -3,6 +3,9 @@ import { format, isValid } from 'date-fns'
 import { CheckCircle2, Clock, CalendarDays, Mail, Search } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { LottieIcon } from '@/components/ui/LottieIcon'
+import pulse from '@/components/lottie/pulse.json'
+import dots from '@/components/lottie/dots.json'
 
 export default function ConfirmationPage({
   searchParams,
@@ -23,11 +26,12 @@ export default function ConfirmationPage({
     <main className="flex min-h-[80vh] items-center justify-center px-4 py-10">
       <Card className="w-full max-w-md p-8 text-center">
         <div
-          className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${
+          className={`relative mx-auto flex h-14 w-14 items-center justify-center rounded-full ${
             isConfirmed ? 'bg-primary-light text-primary' : 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
           }`}
         >
-          {isConfirmed ? <CheckCircle2 className="h-7 w-7" aria-hidden /> : <Clock className="h-7 w-7" aria-hidden />}
+          {isConfirmed && <LottieIcon animationData={pulse} className="pointer-events-none absolute -inset-5" />}
+          {isConfirmed ? <CheckCircle2 className="relative h-7 w-7" aria-hidden /> : <Clock className="h-7 w-7" aria-hidden />}
         </div>
 
         <h1 className="mt-5 text-2xl font-bold text-foreground">
@@ -38,6 +42,13 @@ export default function ConfirmationPage({
             ? `You're all set with ${provider}.`
             : `Your request to ${provider} has been sent. We'll email you once they respond.`}
         </p>
+
+        {!isConfirmed && (
+          <div className="mt-3 flex flex-col items-center">
+            <LottieIcon animationData={dots} className="h-6 w-20" loop />
+            <span className="text-xs text-muted-foreground">Waiting for their response…</span>
+          </div>
+        )}
 
         {/* Structured summary */}
         <div className="mt-6 space-y-3 rounded-xl border border-border bg-muted/40 p-4 text-left">
