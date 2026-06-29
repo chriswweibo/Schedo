@@ -12,16 +12,31 @@ interface ProviderCardProps {
   distanceKm: number | null
   highlighted?: boolean
   onHover?: (id: string | null) => void
+  /** Multi-select for quote requests. */
+  selectable?: boolean
+  selected?: boolean
+  selectDisabled?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
-export function ProviderCard({ id, name, slug, profession, avatarUrl, distanceKm, highlighted, onHover }: ProviderCardProps) {
+export function ProviderCard({ id, name, slug, profession, avatarUrl, distanceKm, highlighted, onHover, selectable, selected, selectDisabled, onToggleSelect }: ProviderCardProps) {
   return (
     <Card
       id={`card-${slug}`}
-      className={`flex items-center gap-4 p-4 transition ${highlighted ? 'ring-2 ring-primary' : ''}`}
+      className={`flex items-center gap-4 p-4 transition ${highlighted ? 'ring-2 ring-primary' : ''} ${selected ? 'ring-2 ring-primary' : ''}`}
       onMouseEnter={() => onHover?.(id)}
       onMouseLeave={() => onHover?.(null)}
     >
+      {selectable && (
+        <input
+          type="checkbox"
+          checked={!!selected}
+          disabled={selectDisabled}
+          onChange={() => onToggleSelect?.(id)}
+          aria-label={`Select ${name} for a quote`}
+          className="h-4 w-4 shrink-0 accent-primary disabled:opacity-40"
+        />
+      )}
       <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-bold text-muted-foreground">
         {avatarUrl ? (
           <Image src={avatarUrl} alt={name} fill sizes="56px" className="rounded-full object-cover" />

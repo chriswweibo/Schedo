@@ -19,6 +19,14 @@ export const CreateBookingSchema = z.object({
   bookingType: z.enum(['INSTANT', 'REQUEST']).default('INSTANT'),
 })
 
+export const CreateQuoteRequestSchema = z.object({
+  providerIds: z.array(z.string()).min(1).max(5),
+  guestName: z.string().min(1).max(200),
+  guestEmail: z.string().email().max(254),
+  guestPhone: z.string().max(40).optional(),
+  message: z.string().min(10).max(2000),
+})
+
 export const UpdateProviderSettingsSchema = z.object({
   bio: z.string().optional(),
   profession: z.string().optional(),

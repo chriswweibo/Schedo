@@ -24,6 +24,11 @@ type Job = {
   imageUrl: string | null; completedAt: Date | string
 }
 
+type QuoteRequest = {
+  id: string; createdAt: Date | string;
+  guestName: string; guestEmail: string; guestPhone: string | null; message: string
+}
+
 type Provider = {
   id: string; name: string; slug: string; bio: string | null;
   profession: string; keywords: string[]; lat: number | null; lng: number | null;
@@ -45,12 +50,14 @@ export function DashboardClient({
   provider: initialProvider,
   upcoming: initialUpcoming,
   jobs: initialJobs,
+  quoteRequests = [],
   slug,
   googleConnected = false,
 }: {
   provider: Provider
   upcoming: Booking[]
   jobs: Job[]
+  quoteRequests?: QuoteRequest[]
   slug: string
   googleConnected?: boolean
 }) {
@@ -157,6 +164,7 @@ export function DashboardClient({
         {tab === 'inbox' && (
           <InboxTab
             upcoming={upcoming}
+            quoteRequests={quoteRequests}
             onStatusChange={handleStatusChange}
           />
         )}
@@ -182,26 +190,76 @@ export function DashboardClient({
 
 /* ── Inbox ─────────────────────────────────────────────── */
 function InboxTab({
-  upcoming, onStatusChange,
+  upcoming, quoteRequests, onStatusChange,
 }: {
   upcoming: Booking[]
+  quoteRequests: QuoteRequest[]
   onStatusChange: (id: string, newStatus: 'CONFIRMED' | 'DECLINED' | 'CANCELLED') => void
 }) {
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        Upcoming bookings {upcoming.length > 0 && `(${upcoming.length})`}
-      </h2>
-      {upcoming.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No upcoming bookings.</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {upcoming.map((b) => (
-            <BookingRow key={b.id} {...b} onStatusChange={onStatusChange} />
-          ))}
-        </div>
-      )}
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Upcoming bookings {upcoming.length > 0 && `(${upcoming.length})`}
+        </h2>
+        {upcoming.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No upcoming bookings.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {upcoming.map((b) => (
+              <BookingRow key={b.id} {...b} onStatusChange={onStatusChange} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Quote requests {quoteRequests.length > 0 && `(${quoteRequests.length})`}
+        </h2>
+        {quoteRequests.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No quote requests yet.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {quoteRequests.map((q) => (
+              <QuoteRequestRow key={q.id} {...q} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
+  )
+}
+
+function QuoteRequestRow({
+  guestName, guestEmail, guestPhone, message, createdAt,
+}: QuoteRequest) {
+  const when = new Date(createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  const mailto = `mailto:${guestEmail}?subject=${encodeURIComponent('Your Schedo quote request')}`
+  return (
+    <Card className="flex flex-col gap-2 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-semibold text-foreground">{guestName}</p>
+        <span className="text-xs text-muted-foreground">{when}</span>
+      </div>
+      <p className="whitespace-pre-wrap text-sm text-muted-foreground">{message}</p>
+      <div className="mt-1 flex flex-wrap gap-2">
+        <a
+          href={mailto}
+          className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+        >
+          Reply with a quote
+        </a>
+        {guestPhone && (
+          <a
+            href={`tel:${guestPhone}`}
+            className="inline-flex items-center rounded-lg border border-input px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Call {guestPhone}
+          </a>
+        )}
+      </div>
+    </Card>
   )
 }
 

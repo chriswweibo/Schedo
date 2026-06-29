@@ -33,6 +33,7 @@ model Provider {
   bookings      Booking[]
   blockedSlots  BlockedSlot[]
   completedJobs CompletedJob[]
+  quoteRequests QuoteRequestProvider[]
 
   @@index([isVisible])
   @@index([lat, lng])
@@ -89,6 +90,30 @@ model CompletedJob {
   completedAt DateTime
 
   @@index([providerId, completedAt])
+}
+
+// A guest's request for quotes, group-sent to up to 5 providers (no date).
+// PII (guestName/guestEmail/guestPhone/message) is encrypted at rest.
+model QuoteRequest {
+  id         String                 @id @default(cuid())
+  guestName  String
+  guestEmail String
+  guestPhone String?
+  message    String
+  createdAt  DateTime               @default(now())
+  providers  QuoteRequestProvider[]
+}
+
+model QuoteRequestProvider {
+  id             String       @id @default(cuid())
+  quoteRequestId String
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  providerId     String
+  provider       Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([quoteRequestId, providerId])
+  @@index([providerId, createdAt])
 }
 
 enum BookingMode {
